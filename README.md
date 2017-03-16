@@ -1,2 +1,4 @@
 # node-service-discovery-kit
-A collection of service discovery methods for Node.js and provide a class to make use of them.
+Service discovery class for Node.js with varied service discovery backend integrated (i.e., Bonjour, MQTTSD).
+
+[![Build Status](https://travis-ci.org/csy1983/node-service-discovery-kit.svg?branch=master)](https://travis-ci.org/csy1983/node-service-discovery-kit)

@@ -1,8 +1,7 @@
 export default class ServiceDiscoveryDataSource {
   /**
-   * Delegation life cycle #1:
-   *   Read service discovery configurations from the delegator to configure
-   *   what methods of service discovery are going to use.
+   * Return service discovery configurations for the delegator to configure what
+   * methods of service discovery are going to use.
    *
    * @method serviceDiscoveryConfigs
    * @return {Object} Configurations of service discovery delegation:
@@ -19,9 +18,8 @@ export default class ServiceDiscoveryDataSource {
   }
 
   /**
-   * Delegation life cycle #3:
-   *   Delegator must implement serviceDiscoveryProps() to return a service object
-   *   to setup the service discovery instances.
+   * Delegator must implement serviceDiscoveryProps() to return a service object
+   * to setup the service discovery instances.
    *
    * @method serviceDiscoveryProps
    * @return {Object} Properties of service object.

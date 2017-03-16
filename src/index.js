@@ -187,3 +187,6 @@ export default class ServiceDiscovery {
     await this.delegate.serviceDiscoveryDidStop();
   }
 }
+
+export Bonjour from './backend/bonjour';
+export MQTTSD from './backend/mqttsd';

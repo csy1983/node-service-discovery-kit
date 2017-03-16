@@ -65,7 +65,8 @@ export default class Bonjour extends EventEmitter {
    * @private
    */
   browse() {
-    this.bonjour.find({ type: this.props.type }, (service) => {
+    this.bonjour.find({ type: this.props.type })
+    .on('up', (service) => {
       const addrs = this.findAddresses(service);
       if (addrs) {
         service.addresses = addrs;

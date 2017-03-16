@@ -19,7 +19,7 @@ class EchoServer extends ServiceDiscovery {
       name: 'HTTP echo server',
       host: 'csy1983',
       port: 8888,
-      type: 'delegate-test',
+      type: 'echo-test',
       protocol: 'tcp',
       subtypes: [],
       txt: {
@@ -67,22 +67,27 @@ class EchoServer extends ServiceDiscovery {
    * Shared test helpers
    */
   testSelfServiceEvent(expectedEvent, callback) {
-    debug('test')('testSelfServiceEvent:', expectedEvent);
-    this.emitter.once('didReceiveEvent', (actualEvent) => {
+    let didReceiveEvent = (actualEvent) => {
+      debug('test')('didReceiveEvent:', actualEvent);
       try {
-        assert.equal(actualEvent.protocol, expectedEvent.protocol);
-        assert.equal(actualEvent.action, expectedEvent.action);
-        assert.equal(actualEvent.service.name, this.serviceDiscoveryProps().name);
-        assert.equal(actualEvent.service.port, this.serviceDiscoveryProps().port);
-        assert.equal(actualEvent.service.type, this.serviceDiscoveryProps().type);
-        assert.equal(actualEvent.service.protocol, this.serviceDiscoveryProps().protocol);
-        assert.deepEqual(actualEvent.service.subtypes, this.serviceDiscoveryProps().subtypes);
-        assert.deepEqual(actualEvent.service.txt, this.serviceDiscoveryProps().txt);
-        callback();
+        let serviceProps = expectedEvent.service || this.serviceDiscoveryProps();
+        if (actualEvent.protocol === expectedEvent.protocol &&
+            actualEvent.action === expectedEvent.action) {
+          assert.equal(actualEvent.service.name, serviceProps.name);
+          assert.equal(actualEvent.service.port, serviceProps.port);
+          assert.equal(actualEvent.service.type, serviceProps.type);
+          assert.equal(actualEvent.service.protocol, serviceProps.protocol);
+          assert.deepEqual(actualEvent.service.subtypes, serviceProps.subtypes);
+          assert.deepEqual(actualEvent.service.txt, serviceProps.txt);
+          this.emitter.removeListener('didReceiveEvent', didReceiveEvent);
+          callback();
+        }
       } catch (error) {
+        this.emitter.removeListener('didReceiveEvent', didReceiveEvent);
         callback(error);
       }
-    });
+    };
+    this.emitter.on('didReceiveEvent', didReceiveEvent);
   }
 }
 
@@ -141,18 +146,34 @@ describe('EchoServer with Bonjour', function() {
 
   describe('#updateServiceProps()', function() {
     it('should republish itself with updated service properties', function(done) {
-      echoServer.setProps({
-        name: 'HTTP echo server',
+      let updatedProp = {
+        name: 'HTTP echo server 2',
         host: 'csy1983',
-        port: 8888,
-        type: 'delegate-test',
+        port: 9999,
+        type: 'echo-test',
         protocol: 'tcp',
         subtypes: [],
         txt: {
-          sn: '12345678',
+          sn: '87654321',
         },
+      };
+
+      echoServer.testSelfServiceEvent({
+        protocol: 'bonjour',
+        action: 'down',
+        service: echoServer.serviceDiscoveryProps(),
+      }, (error) => {
+        if (error) done(error);
       });
-      done();
+
+      echoServer.testSelfServiceEvent({
+        protocol: 'bonjour',
+        action: 'up',
+        service: updatedProp,
+      }, done);
+
+      echoServer.setProps(updatedProp);
+      echoServer.updateServiceProps();
     });
   });
 

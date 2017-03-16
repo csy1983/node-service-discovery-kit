@@ -1,7 +1,7 @@
 /* eslint-disable no-empty-function, no-unused-vars */
 export default class ServiceDiscoveryDelegate {
   /**
-   * Delegation life cycle #2:
+   * Delegation life cycle #1:
    *   Delegator should implement serviceDiscoveryWillStart() to prepare the service
    *   before service discovery starts.
    *
@@ -11,7 +11,7 @@ export default class ServiceDiscoveryDelegate {
   async serviceDiscoveryWillStart() {}
 
   /**
-   * Delegation life cycle #4:
+   * Delegation life cycle #2:
    *   Delegator should implement serviceDiscoveryDidStart() method to do whatever
    *   it wants after service discovery instances are all up and running.
    *
@@ -21,7 +21,7 @@ export default class ServiceDiscoveryDelegate {
   async serviceDiscoveryDidStart() {}
 
   /**
-   * Delegation life cycle #5:
+   * Delegation life cycle #3:
    *   Delegator should implement serviceDiscoveryDidReceiveEvent() method if it
    *   would like to get notified on service up and service down.
    *
@@ -33,7 +33,7 @@ export default class ServiceDiscoveryDelegate {
   serviceDiscoveryDidReceiveEvent(protocol, action, service) {}
 
   /**
-   * Delegation life cycle #6:
+   * Delegation life cycle #4:
    *   Delegator should implement serviceDiscoveryWillStop() method to do some
    *   termination tasks before service discovery instances are going down.
    *
@@ -43,7 +43,7 @@ export default class ServiceDiscoveryDelegate {
   async serviceDiscoveryWillStop() {}
 
   /**
-   * Delegation life cycle #7:
+   * Delegation life cycle #5:
    *   Delegator should implement serviceDiscoveryDidStop() method to do some
    *   cleanup tasks after service discovery instances are going down.
    *
