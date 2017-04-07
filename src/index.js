@@ -173,14 +173,16 @@ export default class ServiceDiscovery {
    * @return {Object}       Child service object with start() and stop() methods.
    */
   createChildService(props) {
-    const { name, txt, port, type } = this.datasource.serviceDiscoveryProps();
+    const { name, port, type = 'default', txt = {} } = this.datasource.serviceDiscoveryProps();
+    const txtpath = txt.path || '';
+    const serialnumber = txt.serialnumber || `${name}:${port}._${type}`;
     const configs = this.datasource.serviceDiscoveryConfigs();
     const childProps = {
       name: props.name || `Child service of ${name}`,
       port: props.port || port,
       type: props.type || type,
       txt: Object.assign({}, props.txt, {
-        path: (txt.path || '/') + (txt.serialnumber || `${name}:${port}._${type}`),
+        path: `${txtpath}/${serialnumber}`.replace(/\/\//g, '/'),
       }),
     };
 
