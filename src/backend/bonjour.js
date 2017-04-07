@@ -17,7 +17,7 @@ export default class Bonjour extends EventEmitter {
    *
    * @param {Object} configs Configuration object:
    * {
-   *   browse: {boolean} if true, browse network services before publish service on start(); otherwise, do publish only.
+   *   browse: {boolean} if true, browse network services before publish service on start(); otherwise, do publish only. (Default: false)
    * }
    */
   constructor(configs = {}) {

@@ -16,6 +16,10 @@ export default class ServiceDiscovery {
     this.dummy = new Dummy();
   }
 
+  /**
+   * Specify the delegation source.
+   * @param {Object} delegate An instance who implements the ServiceDiscoveryDelegate class.
+   */
   setDelegate(delegate) {
     Object.getOwnPropertyNames(Object.getPrototypeOf(this.delegate))
       .filter(prop => prop !== 'constructor')
@@ -24,6 +28,10 @@ export default class ServiceDiscovery {
       });
   }
 
+  /**
+   * Specify the data source.
+   * @param {Object} datasource An instance who implements the ServiceDiscoveryDataSource class.
+   */
   setDataSource(datasource) {
     Object.getOwnPropertyNames(Object.getPrototypeOf(this.datasource))
       .filter(prop => prop !== 'constructor')
@@ -33,7 +41,7 @@ export default class ServiceDiscovery {
   }
 
   /**
-   * Delegation method for delegator to initiate the service discovery delegation.
+   * Initiate the service discovery.
    *
    * @method start
    * @return {Promise} A promise of the result of the initiate process.
@@ -83,7 +91,7 @@ export default class ServiceDiscovery {
   }
 
   /**
-   * Delegation method for the delegator to update the service properties.
+   * Update the service properties.
    * Property changes must be reflected in the return of serviceDiscoveryProps().
    * This method will also republish your service automatically, calling
    * publishService() after this method is unnecessary.
@@ -100,7 +108,7 @@ export default class ServiceDiscovery {
   }
 
   /**
-   * Delegation method for the delegator to manually publish the service.
+   * Manually publish the service.
    *
    * @method publishService
    */
@@ -113,7 +121,7 @@ export default class ServiceDiscovery {
   }
 
   /**
-   * Delegation method for the delegator to find services from the service browser.
+   * Find services from the service browser.
    *
    * @method findService
    * @param  {Object} matches Key-value matches to search in an the service object.
@@ -131,13 +139,31 @@ export default class ServiceDiscovery {
   }
 
   /**
-   * Delegation method for the delegator to create a child service. A child service
-   * can be recognized by its TXT record. A `path` property in TXT describes the
+   * Create a child service. A child service can be recognized by its TXT record.
+   * A `path` property in TXT describes the
    * parent-child relationship between services.
    *
    * For ancestor service, its `path` property is always '/' (root path).
    * For child service, its `path` property contains parent's serial number and
    * even grandparent's, e.g., '/mother-serial-number', '/grandma-sn/mom-sn'.
+   *
+   * If `serialnumber` is not set in txt record of the ancestor service, the path of
+   * child service will use ancestor service's name, port and type combined string
+   * as default serial number. But it is not recommanded to use the combined string as
+   * serial number, because it's not guaranteed to be unique. You should always assign
+   * a serial number for your service.
+   *
+   * Here is an example of TXT record for a parent service:
+   * {
+   *   path: '/',
+   *   serialnumber: 'parent-uuid'
+   * }
+   *
+   * and its child service:
+   * {
+   *   path: '/parent-uuid',
+   *   serialnumber: 'child-uuid'
+   * }
    *
    * Delegator can initiate the child service by calling the start() method from
    * the returned child service object, and terminate it by stop().
@@ -153,7 +179,9 @@ export default class ServiceDiscovery {
       name: props.name || `Child service of ${name}`,
       port: props.port || port,
       type: props.type || type,
-      txt: Object.assign({}, props.txt, { path: (txt.path || '/') + txt.serialnumber }),
+      txt: Object.assign({}, props.txt, {
+        path: (txt.path || '/') + (txt.serialnumber || `${name}:${port}._${type}`),
+      }),
     };
 
     const bonjourChild = configs.bonjour ? new Bonjour() : this.dummy;
@@ -179,7 +207,7 @@ export default class ServiceDiscovery {
   }
 
   /**
-   * Delegation method for the delegator to terminate the service discovery delegation.
+   * Terminate the service discovery.
    *
    * @method stop
    * @return {Promise} A promise of the result of the terminate process.

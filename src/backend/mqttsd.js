@@ -21,7 +21,7 @@ export default class MQTTSD extends EventEmitter {
    * {
    *   brokerURL: {String} MQTT broker URL.
    *   options: {Object} MQTT client options. (See https://github.com/mqttjs/MQTT.js#client)
-   *   browse: {Boolean} if true, browse network services before publish service on start(); otherwise, do publish only.
+   *   browse: {Boolean} if true, browse network services before publish service on start(); otherwise, do publish only. (Default: false)
    * }
    */
   constructor(configs) {
