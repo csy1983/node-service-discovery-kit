@@ -20,7 +20,7 @@ export default class Bonjour extends EventEmitter {
    *   browse: {boolean} if true, browse network services before publish service on start(); otherwise, do publish only.
    * }
    */
-  constructor(configs) {
+  constructor(configs = {}) {
     super();
     this.bonjour = bonjour();
     this.configs = configs;
@@ -117,7 +117,6 @@ export default class Bonjour extends EventEmitter {
    * @param {Object} props A service object with only properties to be updated.
    */
   updateProps(props) {
-    Object.assign(props.txt, this.props.txt);
     Object.assign(this.props, props);
   }
 

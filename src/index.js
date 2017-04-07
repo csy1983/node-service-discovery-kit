@@ -40,6 +40,10 @@ export default class ServiceDiscovery {
    */
   async start() {
     const configs = this.datasource.serviceDiscoveryConfigs();
+    const props = this.datasource.serviceDiscoveryProps();
+
+    if (!props.txt) props.txt = { path: '/' };
+    else if (!props.txt.path) props.txt.path = '/';
 
     if (configs.bonjour) {
       this.bonjour = new Bonjour({ browse: true });
@@ -70,8 +74,8 @@ export default class ServiceDiscovery {
     });
 
     await this.delegate.serviceDiscoveryWillStart();
-    this.bonjour.setProps(this.datasource.serviceDiscoveryProps());
-    this.mqttsd.setProps(this.datasource.serviceDiscoveryProps());
+    this.bonjour.setProps(props);
+    this.mqttsd.setProps(props);
     let bonjour = await this.bonjour.start();
     let mqttsd = await this.mqttsd.start();
     await this.delegate.serviceDiscoveryDidStart();
@@ -87,8 +91,11 @@ export default class ServiceDiscovery {
    * @method updateServiceProps
    */
   updateServiceProps() {
-    this.bonjour.updateProps(this.datasource.serviceDiscoveryProps());
-    this.mqttsd.updateProps(this.datasource.serviceDiscoveryProps());
+    const props = this.datasource.serviceDiscoveryProps();
+    if (!props.txt) props.txt = { path: '/' };
+    else if (!props.txt.path) props.txt.path = '/';
+    this.bonjour.updateProps(props);
+    this.mqttsd.updateProps(props);
     this.publishService();
   }
 
@@ -146,7 +153,7 @@ export default class ServiceDiscovery {
       name: props.name || `Child service of ${name}`,
       port: props.port || port,
       type: props.type || type,
-      txt: Object.assign({}, props.txt, { path: txt.path + txt.serialnumber }),
+      txt: Object.assign({}, props.txt, { path: (txt.path || '/') + txt.serialnumber }),
     };
 
     const bonjourChild = configs.bonjour ? new Bonjour() : this.dummy;

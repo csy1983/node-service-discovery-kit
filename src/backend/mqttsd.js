@@ -3,7 +3,6 @@ import autobind from 'autobind-decorator';
 import ip from 'ip';
 import mqtt from 'mqtt';
 import { findServiceHelper } from '../helper';
-// import debug from 'debug';
 
 const MQTTSD_TOPIC = 'mqttsd';
 
@@ -28,7 +27,11 @@ export default class MQTTSD extends EventEmitter {
   constructor(configs) {
     super();
     this.configs = configs || {};
-    this.props = {};
+    this.props = {
+      protocol: 'tcp',
+      subtypes: [],
+    };
+    this.prevProps = {};
     this.serviceMap = {};
   }
 
@@ -131,7 +134,7 @@ export default class MQTTSD extends EventEmitter {
   publish() {
     if (this.props.name && this.props.port && this.props.type) {
       if (this.address) {
-        this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
+        this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.prevProps, {
           addresses: [this.address],
           status: 'down',
         })), { qos: 1 }, () => {
@@ -171,7 +174,7 @@ export default class MQTTSD extends EventEmitter {
    * @param {Object} props A service object with only properties to be updated.
    */
   updateProps(props) {
-    Object.assign(props.txt, this.props.txt);
+    this.prevProps = Object.assign({}, this.props);
     Object.assign(this.props, props);
   }
 

@@ -5,7 +5,7 @@ import debug from 'debug';
 import EventEmitter from 'events';
 import http from 'http';
 import mosca from 'mosca';
-import ServiceDiscovery from '../dist'; // import from '../src' for istanbul code coverage analysis
+import ServiceDiscovery from '../src';
 
 @autobind
 class EchoServer extends ServiceDiscovery {
@@ -23,7 +23,7 @@ class EchoServer extends ServiceDiscovery {
       protocol: 'tcp',
       subtypes: [],
       txt: {
-        sn: '12345678',
+        serialnumber: '12345678',
       },
     };
   }
@@ -66,19 +66,20 @@ class EchoServer extends ServiceDiscovery {
   /**
    * Shared test helpers
    */
-  testSelfServiceEvent(expectedEvent, callback) {
+  testServiceEvent(expectedEvent, callback) {
     let didReceiveEvent = (actualEvent) => {
-      debug('test')('didReceiveEvent:', actualEvent);
       try {
-        let serviceProps = expectedEvent.service || this.serviceDiscoveryProps();
         if (actualEvent.protocol === expectedEvent.protocol &&
             actualEvent.action === expectedEvent.action) {
-          assert.equal(actualEvent.service.name, serviceProps.name);
-          assert.equal(actualEvent.service.port, serviceProps.port);
-          assert.equal(actualEvent.service.type, serviceProps.type);
-          assert.equal(actualEvent.service.protocol, serviceProps.protocol);
-          assert.deepEqual(actualEvent.service.subtypes, serviceProps.subtypes);
-          assert.deepEqual(actualEvent.service.txt, serviceProps.txt);
+          let expectedProps = expectedEvent.service || this.serviceDiscoveryProps();
+          debug('test')('didReceiveEvent: [actual]', actualEvent);
+          debug('test')('didReceiveEvent: [expected]', expectedProps);
+          assert.equal(actualEvent.service.name, expectedProps.name);
+          assert.equal(actualEvent.service.port, expectedProps.port);
+          assert.equal(actualEvent.service.type, expectedProps.type);
+          assert.equal(actualEvent.service.protocol, expectedProps.protocol);
+          assert.deepEqual(actualEvent.service.subtypes, expectedProps.subtypes);
+          assert.deepEqual(actualEvent.service.txt, expectedProps.txt);
           this.emitter.removeListener('didReceiveEvent', didReceiveEvent);
           callback();
         }
@@ -134,12 +135,14 @@ class EchoServerWithMQTTSD extends EchoServer {
  */
 describe('EchoServer with Bonjour', function() {
   let echoServer = new EchoServerWithBonjour();
+  let childService;
+  let pass = false;
 
   this.timeout(15000);
 
   describe('#start()', function() {
     it('should start and publish itself via Bonjour without throwing error', function(done) {
-      echoServer.testSelfServiceEvent({ protocol: 'bonjour', action: 'up' }, done);
+      echoServer.testServiceEvent({ protocol: 'bonjour', action: 'up' }, done);
       echoServer.start().catch(done);
     });
   });
@@ -154,26 +157,62 @@ describe('EchoServer with Bonjour', function() {
         protocol: 'tcp',
         subtypes: [],
         txt: {
-          sn: '87654321',
+          serialnumber: '87654321',
         },
       };
 
-      echoServer.testSelfServiceEvent({
+      echoServer.testServiceEvent({
         protocol: 'bonjour',
         action: 'down',
         service: echoServer.serviceDiscoveryProps(),
       }, (error) => {
         if (error) done(error);
+        else pass = true;
       });
 
-      echoServer.testSelfServiceEvent({
+      echoServer.testServiceEvent({
         protocol: 'bonjour',
         action: 'up',
         service: updatedProp,
-      }, done);
+      }, (error) => {
+        if (pass) done(error);
+      });
 
       echoServer.setProps(updatedProp);
       echoServer.updateServiceProps();
+    });
+  });
+
+  describe('#createChildService()', function() {
+    it('should create a child service without error', function(done) {
+      childService = echoServer.createChildService({
+        name: 'Child bonjour echo server',
+        txt: { serialnumber: 'child-12345678' },
+      });
+
+      if (childService.start && childService.stop) {
+        done();
+      } else {
+        done('Bad child service object returned');
+      }
+    });
+  });
+
+  describe('#child:start()', function() {
+    it('should start child service without error', function(done) {
+      const serviceProps = echoServer.serviceDiscoveryProps();
+      echoServer.testServiceEvent({
+        protocol: 'bonjour',
+        action: 'up',
+        service: Object.assign(serviceProps, {
+          name: 'Child bonjour echo server',
+          txt: {
+            path: `/${serviceProps.txt.serialnumber}`,
+            serialnumber: 'child-12345678',
+          },
+        }),
+      }, done);
+      childService.start().catch(done);
     });
   });
 
@@ -190,6 +229,7 @@ describe('EchoServer with Bonjour', function() {
 describe('EchoServer with MQTTSD', function() {
   let echoServer = new EchoServerWithMQTTSD();
   let mqttBroker;
+  let childService;
 
   this.timeout(5000);
 
@@ -203,13 +243,83 @@ describe('EchoServer with MQTTSD', function() {
     it('should establish connection to MQTT broker and publish itelf via MQTTSD', function(done) {
       mqttBroker = new mosca.Server();
       mqttBroker.on('error', error => assert(false, error));
-      echoServer.testSelfServiceEvent({ protocol: 'mqttsd', action: 'up' }, done);
+      echoServer.testServiceEvent({ protocol: 'mqttsd', action: 'up' }, done);
+    });
+  });
+
+  describe('#updateServiceProps()', function() {
+    it('should republish itself with updated service properties', function(done) {
+      let pass = false;
+      let updatedProp = {
+        name: 'HTTP echo server 2',
+        host: 'csy1983',
+        port: 9999,
+        type: 'echo-test',
+        protocol: 'tcp',
+        subtypes: [],
+        txt: {
+          serialnumber: '87654321',
+        },
+      };
+
+      echoServer.testServiceEvent({
+        protocol: 'mqttsd',
+        action: 'down',
+        service: echoServer.serviceDiscoveryProps(),
+      }, (error) => {
+        if (error) done(error);
+        else pass = true;
+      });
+
+      echoServer.testServiceEvent({
+        protocol: 'mqttsd',
+        action: 'up',
+        service: updatedProp,
+      }, (error) => {
+        if (pass) done(error);
+      });
+
+      echoServer.setProps(updatedProp);
+      echoServer.updateServiceProps();
+    });
+  });
+
+  describe('#createChildService()', function() {
+    it('should create a child service without error', function(done) {
+      childService = echoServer.createChildService({
+        name: 'Child mqttsd echo server',
+        txt: { serialnumber: 'child-12345678' },
+      });
+
+      if (childService.start && childService.stop) {
+        done();
+      } else {
+        done('Bad child service object returned');
+      }
+    });
+  });
+
+  describe('#child:start()', function() {
+    it('should start child service without error', function(done) {
+      const serviceProps = echoServer.serviceDiscoveryProps();
+      echoServer.testServiceEvent({
+        protocol: 'mqttsd',
+        action: 'up',
+        service: Object.assign(serviceProps, {
+          name: 'Child mqttsd echo server',
+          txt: {
+            path: `/${serviceProps.txt.serialnumber}`,
+            serialnumber: 'child-12345678',
+          },
+        }),
+      }, done);
+      childService.start().catch(done);
     });
   });
 
   describe('#stop()', function() {
     it('should unpublish itself via MQTTSD and stop without throwing error', function(done) {
-      echoServer.testSelfServiceEvent({ protocol: 'mqttsd', action: 'down' }, (error) => {
+      echoServer.testServiceEvent({ protocol: 'mqttsd', action: 'down' }, (error) => {
         mqttBroker.close();
         done(error);
       });
