@@ -143,7 +143,7 @@ async start()
 ```
 See [Class Life Cycle](#user-content-class-life-cycle) for the start flow.
 
-### stop()
+### stop
 ```js
 /**
  * Terminate the service discovery.
