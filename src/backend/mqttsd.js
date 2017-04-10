@@ -7,7 +7,7 @@ import { findServiceHelper } from '../helper';
 const MQTTSD_QUERY_TOPIC = 'mqttsd-query';
 const MQTTSD_TOPIC = 'mqttsd';
 const MQTTSD_QOS = { qos: 1 };
-const MQTTSD_QUERY_RESPONSE_DELAY = 30000;
+const MQTTSD_QUERY_RESPONSE_DELAY = 5000;
 
 /**
  * Service discovery using MQTT.
@@ -51,16 +51,17 @@ export default class MQTTSD extends EventEmitter {
       this.mqtt = mqtt.connect(`mqtt://${this.configs.brokerURL}`, this.configs.options);
       this.mqtt.on('connect', () => {
         this.browse();
-
-        if (this.configs.browse) {
-          this.mqtt.subscribe(MQTTSD_TOPIC, MQTTSD_QOS, () => {
-            this.publish({ query: true });
+        this.mqtt.subscribe(MQTTSD_QUERY_TOPIC, MQTTSD_QOS, () => {
+          if (this.configs.browse) {
+            this.mqtt.subscribe(MQTTSD_TOPIC, MQTTSD_QOS, () => {
+              this.publish({ query: true });
+              resolve();
+            });
+          } else {
+            this.publish();
             resolve();
-          });
-        } else {
-          this.publish();
-          resolve();
-        }
+          }
+        });
       });
 
       this.mqtt.on('error', (error) => {
