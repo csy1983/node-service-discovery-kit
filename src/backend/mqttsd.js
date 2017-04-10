@@ -4,7 +4,10 @@ import ip from 'ip';
 import mqtt from 'mqtt';
 import { findServiceHelper } from '../helper';
 
+const MQTTSD_QUERY_TOPIC = 'mqttsd-query';
 const MQTTSD_TOPIC = 'mqttsd';
+const MQTTSD_QOS = { qos: 1 };
+const MQTTSD_QUERY_RESPONSE_DELAY = 30000;
 
 /**
  * Service discovery using MQTT.
@@ -47,10 +50,11 @@ export default class MQTTSD extends EventEmitter {
 
       this.mqtt = mqtt.connect(`mqtt://${this.configs.brokerURL}`, this.configs.options);
       this.mqtt.on('connect', () => {
+        this.browse();
+
         if (this.configs.browse) {
-          this.mqtt.subscribe(MQTTSD_TOPIC, { qos: 1 }, () => {
-            this.browse();
-            this.publish();
+          this.mqtt.subscribe(MQTTSD_TOPIC, MQTTSD_QOS, () => {
+            this.publish({ query: true });
             resolve();
           });
         } else {
@@ -87,7 +91,7 @@ export default class MQTTSD extends EventEmitter {
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
           addresses: [this.address],
           status: 'down',
-        })), { qos: 1 }, () => {
+        })), MQTTSD_QOS, () => {
           clearTimeout(timeout);
           this.mqtt.end();
           resolve();
@@ -109,7 +113,12 @@ export default class MQTTSD extends EventEmitter {
   browse() {
     if (!this.configs.brokerURL) return;
     this.mqtt.on('message', (topic, message) => {
-      if (topic === MQTTSD_TOPIC) {
+      if (topic === MQTTSD_QUERY_TOPIC) {
+        clearTimeout(this.responseQueryTimer);
+        this.responseQueryTimer = setTimeout(() => {
+          this.publish();
+        }, MQTTSD_QUERY_RESPONSE_DELAY);
+      } else if (this.configs.browse && topic === MQTTSD_TOPIC) {
         const service = JSON.parse(message.toString());
         const addr = service.addresses[0];
 
@@ -130,20 +139,25 @@ export default class MQTTSD extends EventEmitter {
    * Publish service with given properties.
    *
    * @method publish
+   * @param {Object} options
    */
-  publish() {
+  publish(options = {}) {
+    if (options.query) {
+      this.mqtt.publish(MQTTSD_QUERY_TOPIC, '{ query: 1 }', MQTTSD_QOS);
+    }
+
     if (this.props.name && this.props.port && this.props.type) {
       if (this.address) {
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.prevProps, {
           addresses: [this.address],
           status: 'down',
-        })), { qos: 1 }, () => {
+        })), MQTTSD_QOS, () => {
           this.address = ip.address();
           this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
             addresses: [this.address],
             fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
             status: 'up',
-          })), { qos: 1 });
+          })), MQTTSD_QOS);
         });
       } else {
         this.address = ip.address();
@@ -151,7 +165,7 @@ export default class MQTTSD extends EventEmitter {
           addresses: [this.address],
           fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
           status: 'up',
-        })), { qos: 1 });
+        })), MQTTSD_QOS);
       }
     }
   }
