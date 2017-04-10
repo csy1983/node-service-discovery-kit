@@ -54,7 +54,7 @@ export default class MQTTSD extends EventEmitter {
         this.mqtt.subscribe(MQTTSD_QUERY_TOPIC, MQTTSD_QOS, () => {
           if (this.configs.browse) {
             this.mqtt.subscribe(MQTTSD_TOPIC, MQTTSD_QOS, () => {
-              this.publish({ query: true });
+              this.publish({ queryId: this.mqtt.options.clientId });
               resolve();
             });
           } else {
@@ -115,10 +115,13 @@ export default class MQTTSD extends EventEmitter {
     if (!this.configs.brokerURL) return;
     this.mqtt.on('message', (topic, message) => {
       if (topic === MQTTSD_QUERY_TOPIC) {
-        clearTimeout(this.responseQueryTimer);
-        this.responseQueryTimer = setTimeout(() => {
-          this.publish();
-        }, MQTTSD_QUERY_RESPONSE_DELAY);
+        const data = JSON.parse(message.toString());
+        if (data && data.queryId !== this.mqtt.options.clientId) {
+          clearTimeout(this.responseQueryTimer);
+          this.responseQueryTimer = setTimeout(() => {
+            this.publish();
+          }, MQTTSD_QUERY_RESPONSE_DELAY);
+        }
       } else if (this.configs.browse && topic === MQTTSD_TOPIC) {
         const service = JSON.parse(message.toString());
         const addr = service.addresses[0];
@@ -143,8 +146,8 @@ export default class MQTTSD extends EventEmitter {
    * @param {Object} options
    */
   publish(options = {}) {
-    if (options.query) {
-      this.mqtt.publish(MQTTSD_QUERY_TOPIC, '{ query: 1 }', MQTTSD_QOS);
+    if (options.queryId) {
+      this.mqtt.publish(MQTTSD_QUERY_TOPIC, `{"queryId":"${options.queryId}"}`, MQTTSD_QOS);
     }
 
     if (this.props.name && this.props.port && this.props.type) {
