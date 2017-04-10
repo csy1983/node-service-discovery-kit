@@ -47,6 +47,8 @@ export default class ServiceDiscovery {
    * @return {Promise} A promise of the result of the initiate process.
    */
   async start() {
+    await this.delegate.serviceDiscoveryWillStart();
+
     const configs = this.datasource.serviceDiscoveryConfigs();
     const props = this.datasource.serviceDiscoveryProps();
 
@@ -81,7 +83,6 @@ export default class ServiceDiscovery {
       }
     });
 
-    await this.delegate.serviceDiscoveryWillStart();
     this.bonjour.setProps(props);
     this.mqttsd.setProps(props);
     let bonjour = await this.bonjour.start();

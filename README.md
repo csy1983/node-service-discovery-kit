@@ -101,9 +101,9 @@ echoServer.start();
 
 ## Class Life Cycle
 ### start()
-1. Read configs from [serviceDiscoveryConfigs()](#user-content-servicediscoveryconfigs)
-2. Read properties from [serviceDiscoveryProps()](#user-content-servicediscoveryprops)
-3. Callback [serviceDiscoveryWillStart()](#user-content-servicediscoverywillstart)
+1. Callback [serviceDiscoveryWillStart()](#user-content-servicediscoverywillstart)
+2. Read configs from [serviceDiscoveryConfigs()](#user-content-servicediscoveryconfigs)
+3. Read properties from [serviceDiscoveryProps()](#user-content-servicediscoveryprops)
 4. Callback [serviceDiscoveryDidStart()](#user-content-servicediscoverydidstart)
 5. Callback [serviceDiscoveryDidReceiveEvent()](#user-content-servicediscoverydidreceiveevent) on any service found
 
@@ -278,8 +278,11 @@ serviceDiscoveryProps()
 ```js
 /**
  * Delegation life cycle #1:
- *   Delegator should implement serviceDiscoveryWillStart() to prepare the service
- *   before service discovery starts. We usually put our server start codes here.
+ *   Delegator should implement serviceDiscoveryWillStart() to get prepared for
+ *   the service discovery to start.
+ *   We usually do the following tasks here:
+ *     1. Generate dynamic service discovery properties for serviceDiscoveryProps()
+ *     2. Startup our server
  *
  * @method serviceDiscoveryWillStart
  * @return {Promise} A promise of the result of willStart() method.

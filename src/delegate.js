@@ -2,8 +2,11 @@
 export default class ServiceDiscoveryDelegate {
   /**
    * Delegation life cycle #1:
-   *   Delegator should implement serviceDiscoveryWillStart() to prepare the service
-   *   before service discovery starts.
+   *   Delegator should implement serviceDiscoveryWillStart() to get prepared for
+   *   the service discovery to start.
+   *   We usually do the following tasks here:
+   *     1. Generate dynamic service discovery properties for serviceDiscoveryProps()
+   *     2. Startup our server
    *
    * @method serviceDiscoveryWillStart
    * @return {Promise} A promise of the result of willStart() method.
