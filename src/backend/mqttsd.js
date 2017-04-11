@@ -49,8 +49,8 @@ export default class MQTTSD extends EventEmitter {
       if (!this.configs.brokerURL) return resolve();
 
       this.mqtt = mqtt.connect(`mqtt://${this.configs.brokerURL}`, this.configs.options);
+      this.browse();
       this.mqtt.on('connect', () => {
-        this.browse();
         this.mqtt.subscribe(MQTTSD_QUERY_TOPIC, MQTTSD_QOS, () => {
           if (this.configs.browse) {
             this.mqtt.subscribe(MQTTSD_TOPIC, MQTTSD_QOS, () => {
@@ -74,6 +74,14 @@ export default class MQTTSD extends EventEmitter {
       this.mqtt.on('reconnect', () => {
         resolve({ status: 'reconnect' });
       });
+
+      this.mqtt.on('close', () => {
+        //
+      });
+
+      this.mqtt.on('offline', () => {
+        this.mqtt.unsubscribe([MQTTSD_QUERY_TOPIC, MQTTSD_TOPIC]);
+      });
     });
   }
 
@@ -86,7 +94,6 @@ export default class MQTTSD extends EventEmitter {
   stop() {
     return new Promise((resolve) => {
       if (!this.configs.brokerURL) return resolve();
-
       if (this.mqtt.connected) {
         const timeout = setTimeout(resolve, 5000);
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
@@ -116,6 +123,7 @@ export default class MQTTSD extends EventEmitter {
     this.mqtt.on('message', (topic, message) => {
       if (topic === MQTTSD_QUERY_TOPIC) {
         const data = JSON.parse(message.toString());
+
         if (data && data.queryId !== this.mqtt.options.clientId) {
           clearTimeout(this.responseQueryTimer);
           this.responseQueryTimer = setTimeout(() => {
