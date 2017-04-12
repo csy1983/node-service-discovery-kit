@@ -17,7 +17,7 @@ export default class Bonjour extends EventEmitter {
    *
    * @param {Object} configs Configuration object:
    * {
-   *   browse: {boolean} if true, browse network services before publish service on start(); otherwise, do publish only. (Default: false)
+   *   browse: {Boolean} if true, browse network services before publish service on start(); otherwise, do publish only. (Default: false)
    * }
    */
   constructor(configs = {}) {
@@ -65,7 +65,7 @@ export default class Bonjour extends EventEmitter {
    * @private
    */
   browse() {
-    this.bonjour.find({ type: this.props.type })
+    return this.bonjour.find({ type: this.props.type })
     .on('up', (service) => {
       const addrs = this.findAddresses(service);
       if (addrs) {

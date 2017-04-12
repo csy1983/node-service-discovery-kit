@@ -133,12 +133,13 @@ export default class ServiceDiscovery {
     const mqttsdServices = this.mqttsd.findService(matches);
     return bonjourServices.filter((srv) => {
       if (mqttsdServices.length === 0) return true;
-      return !this.mqttsd.findService(Object.assign(matches, {
+      const services = this.mqttsd.findService(Object.assign({
         name: srv.name,
         port: srv.port,
         type: srv.type,
         serialnumber: findSerialNumber(srv),
-      }));
+      }, matches));
+      return services.length === 0;
     }).concat(mqttsdServices);
   }
 

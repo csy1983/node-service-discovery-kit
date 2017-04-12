@@ -15,18 +15,18 @@ export function findSerialNumber(service) {
     service.txt.deviceID ||
     service.txt.Deviceid ||
     service.txt.DeviceId ||
-    service.txt.DeviceID
-  ) : null;
+    service.txt.DeviceID || ''
+  ) : '';
 }
 
 export function defaultComparator(service, searchKey, searchValue) {
   switch (searchKey) {
     case 'addresses':
     case 'subtypes':
-      return service[searchKey].indexOf(searchValue.toLowerCase()) >= 0;
+      return service[searchKey].indexOf(searchValue) >= 0;
     case 'devicetype':
-      return (service.txt && (service.txt.devicetype || service.txt.DeviceType).toLowerCase() === searchValue);
-    case 'serialNumber':
+      return (service.txt && (service.txt.devicetype || service.txt.DeviceType) === searchValue);
+    case 'serialnumber':
       return findSerialNumber(service).toLowerCase() === searchValue.toLowerCase();
     case 'name':
     case 'fqdn':
