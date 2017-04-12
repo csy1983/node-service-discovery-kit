@@ -59,6 +59,15 @@ class EchoServer extends ServiceDiscovery {
   /**
    * ServiceDiscoveryDataSource implementations
    */
+  serviceDiscoveryConfigs() {
+    return {
+      bonjour: true,
+      mqttsd: {
+        brokerURL: 'localhost',
+      },
+    };
+  }
+
   serviceDiscoveryProps() {
     return this.props;
   }
@@ -216,6 +225,15 @@ describe('EchoServer with Bonjour', function() {
     });
   });
 
+  describe('#findService()', function() {
+    it('should return with 2 echo-test services', function(done) {
+      const services = echoServer.findService();
+      debug('test')(services);
+      if (services.length === 2) done();
+      else done(services);
+    });
+  });
+
   describe('#stop()', function() {
     it('should return without throwing error', function() {
       return echoServer.stop();
@@ -317,6 +335,15 @@ describe('EchoServer with MQTTSD', function() {
     });
   });
 
+  describe('#findService()', function() {
+    it('should return with 2 echo-test services', function(done) {
+      const services = echoServer.findService();
+      debug('test')(services);
+      if (services.length === 2) done();
+      else done(services);
+    });
+  });
+
   describe('#stop()', function() {
     it('should unpublish itself via MQTTSD and stop without throwing error', function(done) {
       echoServer.testServiceEvent({ protocol: 'mqttsd', action: 'down' }, (error) => {
@@ -324,6 +351,61 @@ describe('EchoServer with MQTTSD', function() {
         done(error);
       });
       echoServer.stop().catch(done);
+    });
+  });
+});
+
+/**
+ * Test EchoServer with both Bonjour and MQTTSD
+ */
+describe('EchoServer with all backend enabled', function() {
+  let echoServer = new EchoServer();
+  let childService;
+  let mqttBroker;
+
+  this.timeout(5000);
+
+  describe('#start()', function() {
+    it('should start without error', function(done) {
+      mqttBroker = new mosca.Server();
+      mqttBroker.on('error', error => assert(false, error));
+      echoServer.start().then(() => done());
+    });
+  });
+
+  describe('#createChildService()', function() {
+    it('should create a child service without error', function(done) {
+      childService = echoServer.createChildService({
+        name: 'Child echo server',
+        txt: { serialnumber: 'child-12345678' },
+      });
+
+      if (childService.start && childService.stop) {
+        done();
+      } else {
+        done('Bad child service object returned');
+      }
+    });
+  });
+
+  describe('#child:start()', function() {
+    it('should start child service without error', function(done) {
+      childService.start().then(() => done());
+    });
+  });
+
+  describe('#findService()', function() {
+    it('should return with 2 echo-test services', function(done) {
+      const services = echoServer.findService();
+      debug('test')(services);
+      if (services.length === 2) done();
+      else done(services.length);
+    });
+  });
+
+  describe('#stop()', function() {
+    it('should unpublish itself and stop without throwing error', function(done) {
+      echoServer.stop().then(() => done());
     });
   });
 });

@@ -21,16 +21,21 @@ export function findSerialNumber(service) {
 
 export function defaultComparator(service, searchKey, searchValue) {
   switch (searchKey) {
-    case 'Name':
-      return service.name === searchValue;
-    case 'Address':
-      return service.addresses.indexOf(searchValue) >= 0;
-    case 'Host':
-      return service.host === searchValue;
-    case 'DeviceType':
-      return (service.txt && (service.txt.devicetype || service.txt.DeviceType) === searchValue);
-    case 'SerialNumber':
-      return findSerialNumber(service) === searchValue;
+    case 'addresses':
+    case 'subtypes':
+      return service[searchKey].indexOf(searchValue.toLowerCase()) >= 0;
+    case 'devicetype':
+      return (service.txt && (service.txt.devicetype || service.txt.DeviceType).toLowerCase() === searchValue);
+    case 'serialNumber':
+      return findSerialNumber(service).toLowerCase() === searchValue.toLowerCase();
+    case 'name':
+    case 'fqdn':
+    case 'host':
+    case 'type':
+    case 'protocol':
+      return service[searchKey].toLowerCase() === searchValue.toLowerCase();
+    case 'port':
+      return service.port === searchValue;
     default:
       return false;
   }

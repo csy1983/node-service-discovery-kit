@@ -134,7 +134,10 @@ export default class ServiceDiscovery {
     return bonjourServices.filter((srv) => {
       if (mqttsdServices.length === 0) return true;
       return !this.mqttsd.findService(Object.assign(matches, {
-        SerialNumber: findSerialNumber(srv),
+        name: srv.name,
+        port: srv.port,
+        type: srv.type,
+        serialnumber: findSerialNumber(srv),
       }));
     }).concat(mqttsdServices);
   }
