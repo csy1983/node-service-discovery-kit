@@ -1,3 +1,5 @@
+import { STATUS_UP } from './constants';
+
 export function findSerialNumber(service) {
   return service.txt ? (
     service.txt.serialnumber ||
@@ -33,6 +35,7 @@ export function defaultComparator(service, searchKey, searchValue) {
     case 'host':
     case 'type':
     case 'protocol':
+    case 'status':
       return service[searchKey].toLowerCase() === searchValue.toLowerCase();
     case 'port':
       return service.port === searchValue;
@@ -43,6 +46,11 @@ export function defaultComparator(service, searchKey, searchValue) {
 
 export function findServiceHelper(serviceMap = {}, matches = {}, comparator = defaultComparator) {
   const services = [];
+
+  /* Default returns online service only */
+  if (matches.status === undefined) {
+    matches.status = STATUS_UP;
+  }
 
   Object.keys(serviceMap).forEach((addr) => {
     serviceMap[addr].forEach((srv) => {

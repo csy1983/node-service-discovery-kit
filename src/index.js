@@ -8,6 +8,60 @@ import Dummy from './backend/dummy';
 import { findSerialNumber } from './helper';
 
 @autobind
+class ChildService {
+  constructor(configs, props, parentProps) {
+    const {
+      name,
+      port,
+      type = 'default',
+      protocol,
+      subtypes = [],
+      txt = {},
+    } = parentProps;
+    const txtpath = txt.path || '';
+    const serialnumber = txt.serialnumber || `${name}:${port}._${type}`;
+
+    this.dummy = new Dummy();
+    this.status = '';
+    this.configs = configs;
+    this.props = {
+      name: props.name || `Child service of ${name}`,
+      port: props.port || port,
+      type: props.type || type,
+      protocol: props.protocol || protocol,
+      subtypes: props.subtypes || subtypes,
+      txt: Object.assign({}, props.txt, {
+        path: `${txtpath}/${serialnumber}`.replace(/\/\//g, '/'),
+      }),
+    };
+
+    this.bonjourChild = configs.bonjour ? new Bonjour() : this.dummy;
+    this.bonjourChild.setProps(this.props);
+
+    this.mqttsdChild = configs.mqttsd ? new MQTTSD(configs.mqttsd) : this.dummy;
+    this.mqttsdChild.setProps(this.props);
+  }
+
+  async start() {
+    if (this.status !== 'running') {
+      await this.bonjourChild.start();
+      await this.mqttsdChild.start();
+      this.status = 'running';
+    }
+    await this.status;
+  }
+
+  async stop() {
+    if (this.status !== 'stopped') {
+      await this.bonjourChild.stop();
+      await this.mqttsdChild.stop();
+      this.status = 'stopped';
+    }
+    await this.status;
+  }
+}
+
+@autobind
 export default class ServiceDiscovery {
   constructor() {
     this.delegate = new ServiceDiscoveryDelegate();
@@ -178,38 +232,10 @@ export default class ServiceDiscovery {
    * @return {Object}       Child service object with start() and stop() methods.
    */
   createChildService(props) {
-    const { name, port, type = 'default', txt = {} } = this.datasource.serviceDiscoveryProps();
-    const txtpath = txt.path || '';
-    const serialnumber = txt.serialnumber || `${name}:${port}._${type}`;
     const configs = this.datasource.serviceDiscoveryConfigs();
-    const childProps = {
-      name: props.name || `Child service of ${name}`,
-      port: props.port || port,
-      type: props.type || type,
-      txt: Object.assign({}, props.txt, {
-        path: `${txtpath}/${serialnumber}`.replace(/\/\//g, '/'),
-      }),
-    };
-
-    const bonjourChild = configs.bonjour ? new Bonjour() : this.dummy;
-    bonjourChild.setProps(childProps);
-
-    const mqttsdChild = configs.mqttsd ? new MQTTSD(configs.mqttsd) : this.dummy;
-    mqttsdChild.setProps(childProps);
-
-    const child = {
-      async start() {
-        await bonjourChild.start();
-        await mqttsdChild.start();
-      },
-      async stop() {
-        await bonjourChild.stop();
-        await mqttsdChild.stop();
-      },
-    };
-
+    const parentProps = this.datasource.serviceDiscoveryProps();
+    const child = new ChildService(configs, props, parentProps);
     this.children.push(child);
-
     return child;
   }
 

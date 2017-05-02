@@ -2,6 +2,7 @@ import EventEmitter from 'events';
 import autobind from 'autobind-decorator';
 import ip from 'ip';
 import mqtt from 'mqtt';
+import { STATUS_UP, STATUS_DOWN } from '../constants';
 import { findServiceHelper } from '../helper';
 
 const MQTTSD_QUERY_TOPIC = 'mqttsd-query';
@@ -98,7 +99,7 @@ export default class MQTTSD extends EventEmitter {
         const timeout = setTimeout(resolve, 5000);
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
           addresses: [this.address],
-          status: 'down',
+          status: STATUS_DOWN,
         })), MQTTSD_QOS, () => {
           clearTimeout(timeout);
           this.mqtt.end();
@@ -135,13 +136,14 @@ export default class MQTTSD extends EventEmitter {
         const addr = service.addresses[0];
 
         if (!addr || !service.txt) return;
-        if (service.status === 'up') {
+        if (service.status === STATUS_UP) {
           this.serviceMap[addr] = (this.serviceMap[addr] || []).filter(srv => srv.txt.serialnumber !== service.txt.serialnumber);
           this.serviceMap[addr].push(service);
-          this.emit('event', { action: 'up', data: service });
-        } else if (service.status === 'down') {
+          this.emit('event', { action: STATUS_UP, data: service });
+        } else if (service.status === STATUS_DOWN) {
           this.serviceMap[addr] = (this.serviceMap[addr] || []).filter(srv => srv.txt.serialnumber !== service.txt.serialnumber);
-          this.emit('event', { action: 'down', data: service });
+          this.serviceMap[addr].push(service);
+          this.emit('event', { action: STATUS_DOWN, data: service });
         }
       }
     });
@@ -162,13 +164,13 @@ export default class MQTTSD extends EventEmitter {
       if (this.address) {
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.prevProps, {
           addresses: [this.address],
-          status: 'down',
+          status: STATUS_DOWN,
         })), MQTTSD_QOS, () => {
           this.address = ip.address();
           this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
             addresses: [this.address],
             fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
-            status: 'up',
+            status: STATUS_UP,
           })), MQTTSD_QOS);
         });
       } else {
@@ -176,7 +178,7 @@ export default class MQTTSD extends EventEmitter {
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
           addresses: [this.address],
           fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
-          status: 'up',
+          status: STATUS_UP,
         })), MQTTSD_QOS);
       }
     }

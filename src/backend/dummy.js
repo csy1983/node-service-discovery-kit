@@ -8,8 +8,12 @@ import EventEmitter from 'events';
  * @extends EventEmitter
  */
 export default class Dummy extends EventEmitter {
-  start() {}
-  stop() {}
+  start() {
+    return new Promise(resolve => resolve());
+  }
+  stop() {
+    return new Promise(resolve => resolve());
+  }
   publish() {}
   setProps(props = {}) {}
   updateProps(props) {}

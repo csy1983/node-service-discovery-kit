@@ -2,6 +2,7 @@ import EventEmitter from 'events';
 import autobind from 'autobind-decorator';
 import bonjour from 'bonjour';
 import ip from 'ip';
+import { STATUS_UP, STATUS_DOWN } from '../constants';
 import { findServiceHelper } from '../helper';
 
 /**
@@ -51,7 +52,7 @@ export default class Bonjour extends EventEmitter {
   stop() {
     return new Promise((resolve) => {
       this.bonjour.unpublishAll(() => {
-        this.bonjour.destroy();
+        // this.bonjour.destroy();
         resolve();
       });
     });
@@ -70,16 +71,19 @@ export default class Bonjour extends EventEmitter {
       const addrs = this.findAddresses(service);
       if (addrs) {
         service.addresses = addrs;
+        service.status = STATUS_UP;
         this.serviceMap[addrs[0]] = (this.serviceMap[addrs[0]] || []).filter(serv => serv.fqdn !== service.fqdn);
         this.serviceMap[addrs[0]].push(service);
-        this.emit('event', { action: 'up', data: service });
+        this.emit('event', { action: STATUS_UP, data: service });
       }
     })
     .on('down', (service) => {
       const addrs = this.findAddresses(service);
       if (addrs) {
+        service.status = STATUS_DOWN;
         this.serviceMap[addrs[0]] = (this.serviceMap[addrs[0]] || []).filter(serv => serv.fqdn !== service.fqdn);
-        this.emit('event', { action: 'down', data: service });
+        this.serviceMap[addrs[0]].push(service);
+        this.emit('event', { action: STATUS_DOWN, data: service });
       }
     });
   }
