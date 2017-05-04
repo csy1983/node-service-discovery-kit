@@ -30,6 +30,8 @@ export function defaultComparator(service, searchKey, searchValue) {
       return (service.txt && (service.txt.devicetype || service.txt.DeviceType) === searchValue);
     case 'serialnumber':
       return findSerialNumber(service).toLowerCase() === searchValue.toLowerCase();
+    case 'workgroup':
+      return (service.txt && (service.txt.workgroup || service.txt.Workgroup) === searchValue);
     case 'name':
     case 'fqdn':
     case 'host':
