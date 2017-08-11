@@ -136,6 +136,9 @@ export default class MQTTSD extends EventEmitter {
         const addr = service.addresses[0];
 
         if (!addr || !service.txt) return;
+
+        service.timestamp = Date.now();
+
         if (service.status === STATUS_UP) {
           this.serviceMap[addr] = (this.serviceMap[addr] || []).filter(srv => srv.txt.serialnumber !== service.txt.serialnumber);
           this.serviceMap[addr].push(service);

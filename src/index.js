@@ -185,16 +185,47 @@ export default class ServiceDiscovery {
   findService(matches = {}) {
     const bonjourServices = this.bonjour.findService(matches);
     const mqttsdServices = this.mqttsd.findService(matches);
-    return bonjourServices.filter((srv) => {
-      if (mqttsdServices.length === 0) return true;
+    const mergedServices = [];
+
+    bonjourServices.forEach((srv) => {
       const services = this.mqttsd.findService(Object.assign({
-        name: srv.name,
+        fqdn: srv.fqdn,
         port: srv.port,
-        type: srv.type,
         serialnumber: findSerialNumber(srv),
       }, matches));
-      return services.length === 0;
-    }).concat(mqttsdServices);
+
+      if (services.length > 0) {
+        for (let i = 0; i < services.length; i++) {
+          if (srv.timestamp > services[i].timestamp) {
+            mergedServices.push(srv);
+            break;
+          }
+        }
+      } else {
+        mergedServices.push(srv);
+      }
+    });
+
+    mqttsdServices.forEach((srv) => {
+      const services = this.bonjour.findService(Object.assign({
+        fqdn: srv.fqdn,
+        port: srv.port,
+        serialnumber: findSerialNumber(srv),
+      }, matches));
+
+      if (services.length > 0) {
+        for (let i = 0; i < services.length; i++) {
+          if (srv.timestamp > services[i].timestamp) {
+            mergedServices.push(srv);
+            break;
+          }
+        }
+      } else {
+        mergedServices.push(srv);
+      }
+    });
+
+    return mergedServices;
   }
 
   /**

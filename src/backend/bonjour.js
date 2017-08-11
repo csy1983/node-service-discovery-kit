@@ -72,6 +72,7 @@ export default class Bonjour extends EventEmitter {
       if (addrs) {
         service.addresses = addrs;
         service.status = STATUS_UP;
+        service.timestamp = Date.now();
         this.serviceMap[addrs[0]] = (this.serviceMap[addrs[0]] || []).filter(serv => serv.fqdn !== service.fqdn);
         this.serviceMap[addrs[0]].push(service);
         this.emit('event', { action: STATUS_UP, data: service });
@@ -81,6 +82,7 @@ export default class Bonjour extends EventEmitter {
       const addrs = this.findAddresses(service);
       if (addrs) {
         service.status = STATUS_DOWN;
+        service.timestamp = Date.now();
         this.serviceMap[addrs[0]] = (this.serviceMap[addrs[0]] || []).filter(serv => serv.fqdn !== service.fqdn);
         this.serviceMap[addrs[0]].push(service);
         this.emit('event', { action: STATUS_DOWN, data: service });
