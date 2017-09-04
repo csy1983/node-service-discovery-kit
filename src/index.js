@@ -171,7 +171,7 @@ export default class ServiceDiscovery {
     this.bonjour.publish();
     this.mqttsd.publish();
     this.children.forEach((child) => {
-      child.stop(child.start);
+      child.stop().then(() => child.start());
     });
   }
 
