@@ -32,7 +32,7 @@
     "url": "https://github.com/csy1983/node-service-discovery-kit.git"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha -b",
-    "cover": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha"
+    "test": "./node_modules/.bin/mocha -b --exit",
+    "cover": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha --exit"
   }
 }
