@@ -5,7 +5,6 @@ import ServiceDiscoveryDataSource from './datasource';
 import Bonjour from './backend/bonjour';
 import MQTTSD from './backend/mqttsd';
 import Dummy from './backend/dummy';
-import { findSerialNumber } from './helper';
 
 @autobind
 class ChildService {
@@ -19,7 +18,7 @@ class ChildService {
       txt = {},
     } = parentProps;
     const txtpath = txt.path || '';
-    const serialnumber = txt.serialnumber || `${name}:${port}._${type}`;
+    const pid = txt[configs.idSelector || 'serialnumber'] || `${name}:${port}._${type}`;
 
     this.dummy = new Dummy();
     this.status = '';
@@ -31,7 +30,7 @@ class ChildService {
       protocol: props.protocol || protocol,
       subtypes: props.subtypes || subtypes,
       txt: Object.assign({}, props.txt, {
-        path: `${txtpath}/${serialnumber}`.replace(/\/\//g, '/'),
+        path: `${txtpath}/${pid}`.replace(/\/\//g, '/'),
       }),
     };
 
@@ -191,7 +190,6 @@ export default class ServiceDiscovery {
       const services = this.mqttsd.findService(Object.assign({
         fqdn: srv.fqdn,
         port: srv.port,
-        serialnumber: findSerialNumber(srv),
       }, matches));
 
       if (services.length > 0) {
@@ -210,7 +208,6 @@ export default class ServiceDiscovery {
       const services = this.bonjour.findService(Object.assign({
         fqdn: srv.fqdn,
         port: srv.port,
-        serialnumber: findSerialNumber(srv),
       }, matches));
 
       if (services.length > 0) {
