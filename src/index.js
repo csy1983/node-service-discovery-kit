@@ -187,9 +187,9 @@ class ServiceDiscovery {
    * @param  {Object} matches Key-value matches to search in an the service object.
    * @return {Array}          All matched service objects in an array.
    */
-  findService (matches = {}) {
-    const bonjourServices = this.bonjour.findService(matches)
-    const mqttsdServices = this.mqttsd.findService(matches)
+  findService (matches = {}, comparator) {
+    const bonjourServices = this.bonjour.findService(matches, comparator)
+    const mqttsdServices = this.mqttsd.findService(matches, comparator)
     const mergedServices = []
 
     bonjourServices.forEach((srv) => {
