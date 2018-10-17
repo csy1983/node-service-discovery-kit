@@ -72,7 +72,8 @@ class EchoServer extends ServiceDiscovery {
       bonjour: true, // Enable bonjour
       mqttsd: {      // Enable mqttsd as well
         brokerURL: 'localhost'
-      }
+      },
+      idSelector: 'serialnumber'
     };
   }
 

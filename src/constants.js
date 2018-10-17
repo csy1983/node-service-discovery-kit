@@ -1,2 +1,2 @@
-export const STATUS_UP = 'up';
-export const STATUS_DOWN = 'down';
+exports.STATUS_UP = 'up'
+exports.STATUS_DOWN = 'down'

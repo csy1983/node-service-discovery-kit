@@ -1,5 +1,5 @@
 /* eslint-disable no-empty-function, no-unused-vars */
-export default class ServiceDiscoveryDelegate {
+class ServiceDiscoveryDelegate {
   /**
    * Delegation life cycle #1:
    *   Delegator should implement serviceDiscoveryWillStart() to get prepared for
@@ -11,7 +11,7 @@ export default class ServiceDiscoveryDelegate {
    * @method serviceDiscoveryWillStart
    * @return {Promise} A promise of the result of willStart() method.
    */
-  async serviceDiscoveryWillStart() {}
+  async serviceDiscoveryWillStart () {}
 
   /**
    * Delegation life cycle #2:
@@ -21,7 +21,7 @@ export default class ServiceDiscoveryDelegate {
    * @method serviceDiscoveryDidStart
    * @return {Promise} A promise of the result of didStart() method.
    */
-  async serviceDiscoveryDidStart() {}
+  async serviceDiscoveryDidStart () {}
 
   /**
    * Delegation life cycle #3:
@@ -33,7 +33,7 @@ export default class ServiceDiscoveryDelegate {
    * @param {String} action   Event action, i.e., 'up', 'down'.
    * @param {Object} service  Service object who triggered this event.
    */
-  serviceDiscoveryDidReceiveEvent(protocol, action, service) {}
+  serviceDiscoveryDidReceiveEvent (protocol, action, service) {}
 
   /**
    * Delegation life cycle #4:
@@ -43,7 +43,7 @@ export default class ServiceDiscoveryDelegate {
    * @method serviceDiscoveryWillStop
    * @return {Promise} A promise of the result of willStop() method.
    */
-  async serviceDiscoveryWillStop() {}
+  async serviceDiscoveryWillStop () {}
 
   /**
    * Delegation life cycle #5:
@@ -53,5 +53,7 @@ export default class ServiceDiscoveryDelegate {
    * @method serviceDiscoveryDidStop
    * @return {Promise} A promise of the result of didStop() method.
    */
-  async serviceDiscoveryDidStop() {}
+  async serviceDiscoveryDidStop () {}
 }
+
+module.exports = ServiceDiscoveryDelegate

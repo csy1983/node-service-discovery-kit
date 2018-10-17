@@ -1,97 +1,102 @@
 /* eslint-disable no-empty-function, no-unused-vars */
-import autobind from 'autobind-decorator';
-import ServiceDiscoveryDelegate from './delegate';
-import ServiceDiscoveryDataSource from './datasource';
-import Bonjour from './backend/bonjour';
-import MQTTSD from './backend/mqttsd';
-import Dummy from './backend/dummy';
-import { findSerialNumber } from './helper';
+const ServiceDiscoveryDelegate = require('./delegate')
+const ServiceDiscoveryDataSource = require('./datasource')
+const Bonjour = require('./backend/bonjour')
+const MQTTSD = require('./backend/mqttsd')
+const Dummy = require('./backend/dummy')
 
-@autobind
 class ChildService {
-  constructor(configs, props, parentProps) {
+  constructor (configs, props, parentProps) {
     const {
       name,
       port,
       type = 'default',
       protocol,
       subtypes = [],
-      txt = {},
-    } = parentProps;
-    const txtpath = txt.path || '';
-    const serialnumber = txt.serialnumber || `${name}:${port}._${type}`;
+      txt = {}
+    } = parentProps
+    const txtpath = txt.path || ''
+    const pid = txt[configs.idSelector || 'serialnumber'] || `${name}:${port}._${type}`
 
-    this.dummy = new Dummy();
-    this.status = '';
-    this.configs = configs;
+    this.dummy = new Dummy()
+    this.status = ''
+    this.configs = configs
     this.props = {
       name: props.name || `Child service of ${name}`,
       port: props.port || port,
       type: props.type || type,
       protocol: props.protocol || protocol,
       subtypes: props.subtypes || subtypes,
-      txt: Object.assign({}, props.txt, {
-        path: `${txtpath}/${serialnumber}`.replace(/\/\//g, '/'),
-      }),
-    };
+      txt: {
+        ...props.txt,
+        path: `${txtpath}/${pid}`.replace(/\/\//g, '/')
+      }
+    }
 
-    this.bonjourChild = configs.bonjour ? new Bonjour() : this.dummy;
-    this.bonjourChild.setProps(this.props);
+    this.bonjourChild = configs.bonjour ? new Bonjour() : this.dummy
+    this.bonjourChild.setProps(this.props)
 
-    this.mqttsdChild = configs.mqttsd ? new MQTTSD(configs.mqttsd) : this.dummy;
-    this.mqttsdChild.setProps(this.props);
+    this.mqttsdChild = configs.mqttsd ? new MQTTSD(configs.mqttsd) : this.dummy
+    this.mqttsdChild.setProps(this.props)
   }
 
-  async start() {
+  async start () {
     if (this.status !== 'running') {
-      await this.bonjourChild.start();
-      await this.mqttsdChild.start();
-      this.status = 'running';
+      await this.bonjourChild.start()
+      await this.mqttsdChild.start()
+      this.status = 'running'
     }
-    await this.status;
+    await this.status
   }
 
-  async stop() {
+  async stop () {
     if (this.status !== 'stopped') {
-      await this.bonjourChild.stop();
-      await this.mqttsdChild.stop();
-      this.status = 'stopped';
+      await this.bonjourChild.stop()
+      await this.mqttsdChild.stop()
+      this.status = 'stopped'
     }
-    await this.status;
+    await this.status
   }
 }
 
-@autobind
-export default class ServiceDiscovery {
-  constructor() {
-    this.delegate = new ServiceDiscoveryDelegate();
-    this.datasource = new ServiceDiscoveryDataSource();
-    this.children = [];
-    this.dummy = new Dummy();
+class ServiceDiscovery {
+  constructor () {
+    this.delegate = new ServiceDiscoveryDelegate()
+    this.datasource = new ServiceDiscoveryDataSource()
+    this.children = []
+    this.dummy = new Dummy()
+    this.setDelegate = this.setDelegate.bind(this)
+    this.setDataSource = this.setDataSource.bind(this)
+    this.start = this.start.bind(this)
+    this.stop = this.stop.bind(this)
+    this.updateServiceProps = this.updateServiceProps.bind(this)
+    this.publishService = this.publishService.bind(this)
+    this.findService = this.findService.bind(this)
+    this.createChildService = this.createChildService.bind(this)
   }
 
   /**
    * Specify the delegation source.
    * @param {Object} delegate An instance who implements the ServiceDiscoveryDelegate class.
    */
-  setDelegate(delegate) {
+  setDelegate (delegate) {
     Object.getOwnPropertyNames(Object.getPrototypeOf(this.delegate))
       .filter(prop => prop !== 'constructor')
       .forEach((prop) => {
-        if (delegate[prop]) this.delegate[prop] = delegate[prop];
-      });
+        if (delegate[prop]) this.delegate[prop] = delegate[prop]
+      })
   }
 
   /**
    * Specify the data source.
    * @param {Object} datasource An instance who implements the ServiceDiscoveryDataSource class.
    */
-  setDataSource(datasource) {
+  setDataSource (datasource) {
     Object.getOwnPropertyNames(Object.getPrototypeOf(this.datasource))
       .filter(prop => prop !== 'constructor')
       .forEach((prop) => {
-        if (datasource[prop]) this.datasource[prop] = datasource[prop];
-      });
+        if (datasource[prop]) this.datasource[prop] = datasource[prop]
+      })
   }
 
   /**
@@ -100,49 +105,49 @@ export default class ServiceDiscovery {
    * @method start
    * @return {Promise} A promise of the result of the initiate process.
    */
-  async start() {
-    await this.delegate.serviceDiscoveryWillStart();
+  async start () {
+    await this.delegate.serviceDiscoveryWillStart()
 
-    const configs = this.datasource.serviceDiscoveryConfigs();
-    const props = this.datasource.serviceDiscoveryProps();
+    const configs = this.datasource.serviceDiscoveryConfigs()
+    const props = this.datasource.serviceDiscoveryProps()
 
-    if (!props.txt) props.txt = { path: '/' };
-    else if (!props.txt.path) props.txt.path = '/';
+    if (!props.txt) props.txt = { path: '/' }
+    else if (!props.txt.path) props.txt.path = '/'
 
     if (configs.bonjour) {
-      this.bonjour = new Bonjour({ browse: true });
+      this.bonjour = new Bonjour({ browse: true })
     } else {
-      this.bonjour = this.dummy;
+      this.bonjour = this.dummy
     }
 
     this.bonjour.on('event', (event) => {
       if (this.delegate.serviceDiscoveryDidReceiveEvent) {
-        this.delegate.serviceDiscoveryDidReceiveEvent('bonjour', event.action, event.data);
+        this.delegate.serviceDiscoveryDidReceiveEvent('bonjour', event.action, event.data)
       }
-    });
+    })
 
     if (configs.mqttsd) {
       this.mqttsd = new MQTTSD({
         browse: true,
         brokerURL: configs.mqttsd.brokerURL,
-        options: configs.mqttsd.options,
-      });
+        options: configs.mqttsd.options
+      })
     } else {
-      this.mqttsd = this.dummy;
+      this.mqttsd = this.dummy
     }
 
     this.mqttsd.on('event', (event) => {
       if (this.delegate.serviceDiscoveryDidReceiveEvent) {
-        this.delegate.serviceDiscoveryDidReceiveEvent('mqttsd', event.action, event.data);
+        this.delegate.serviceDiscoveryDidReceiveEvent('mqttsd', event.action, event.data)
       }
-    });
+    })
 
-    this.bonjour.setProps(props);
-    this.mqttsd.setProps(props);
-    let bonjour = await this.bonjour.start();
-    let mqttsd = await this.mqttsd.start();
-    await this.delegate.serviceDiscoveryDidStart();
-    return { bonjour, mqttsd };
+    this.bonjour.setProps(props)
+    this.mqttsd.setProps(props)
+    let bonjour = await this.bonjour.start()
+    let mqttsd = await this.mqttsd.start()
+    await this.delegate.serviceDiscoveryDidStart()
+    return { bonjour, mqttsd }
   }
 
   /**
@@ -153,13 +158,13 @@ export default class ServiceDiscovery {
    *
    * @method updateServiceProps
    */
-  updateServiceProps() {
-    const props = this.datasource.serviceDiscoveryProps();
-    if (!props.txt) props.txt = { path: '/' };
-    else if (!props.txt.path) props.txt.path = '/';
-    this.bonjour.updateProps(props);
-    this.mqttsd.updateProps(props);
-    this.publishService();
+  updateServiceProps () {
+    const props = this.datasource.serviceDiscoveryProps()
+    if (!props.txt) props.txt = { path: '/' }
+    else if (!props.txt.path) props.txt.path = '/'
+    this.bonjour.updateProps(props)
+    this.mqttsd.updateProps(props)
+    this.publishService()
   }
 
   /**
@@ -167,12 +172,12 @@ export default class ServiceDiscovery {
    *
    * @method publishService
    */
-  publishService() {
-    this.bonjour.publish();
-    this.mqttsd.publish();
+  publishService () {
+    this.bonjour.publish()
+    this.mqttsd.publish()
     this.children.forEach((child) => {
-      child.stop().then(() => child.start());
-    });
+      child.stop().then(() => child.start())
+    })
   }
 
   /**
@@ -182,50 +187,50 @@ export default class ServiceDiscovery {
    * @param  {Object} matches Key-value matches to search in an the service object.
    * @return {Array}          All matched service objects in an array.
    */
-  findService(matches = {}) {
-    const bonjourServices = this.bonjour.findService(matches);
-    const mqttsdServices = this.mqttsd.findService(matches);
-    const mergedServices = [];
+  findService (matches = {}) {
+    const bonjourServices = this.bonjour.findService(matches)
+    const mqttsdServices = this.mqttsd.findService(matches)
+    const mergedServices = []
 
     bonjourServices.forEach((srv) => {
-      const services = this.mqttsd.findService(Object.assign({
+      const services = this.mqttsd.findService({
         fqdn: srv.fqdn,
         port: srv.port,
-        serialnumber: findSerialNumber(srv),
-      }, matches));
+        ...matches
+      })
 
       if (services.length > 0) {
         for (let i = 0; i < services.length; i++) {
           if (srv.timestamp > services[i].timestamp) {
-            mergedServices.push(srv);
-            break;
+            mergedServices.push(srv)
+            break
           }
         }
       } else {
-        mergedServices.push(srv);
+        mergedServices.push(srv)
       }
-    });
+    })
 
     mqttsdServices.forEach((srv) => {
-      const services = this.bonjour.findService(Object.assign({
+      const services = this.bonjour.findService({
         fqdn: srv.fqdn,
         port: srv.port,
-        serialnumber: findSerialNumber(srv),
-      }, matches));
+        ...matches
+      })
 
       if (services.length > 0) {
         for (let i = 0; i < services.length; i++) {
           if (srv.timestamp > services[i].timestamp) {
-            mergedServices.push(srv);
-            break;
+            mergedServices.push(srv)
+            break
           }
         }
       } else {
-        mergedServices.push(srv);
+        mergedServices.push(srv)
       }
-    });
+    })
 
-    return mergedServices;
+    return mergedServices
   }
 
   /**
@@ -234,16 +239,16 @@ export default class ServiceDiscovery {
    * parent-child relationship between services.
    *
    * For ancestor service, its `path` property is always '/' (root path).
-   * For child service, its `path` property contains parent's serial number and
-   * even grandparent's, e.g., '/mother-serial-number', '/grandma-sn/mom-sn'.
+   * For child service, its `path` property contains parent's id and
+   * even grandparent's, e.g., '/mother-uuid', '/grandma-uuid/mom-uuid'.
    *
-   * If `serialnumber` is not set in txt record of the ancestor service, the path of
-   * child service will use ancestor service's name, port and type combined string
-   * as default serial number. But it is not recommanded to use the combined string as
-   * serial number, because it's not guaranteed to be unique. You should always assign
-   * a serial number for your service.
+   * If parent id specified by `idSelector` in serviceDiscoveryConfigs is not set in
+   * txt record of the ancestor service, the path of child service will use ancestor
+   * service's name, port and type combined string as default id.
+   * But it is not recommanded to use the combined string as an id, because it's not
+   * guaranteed to be unique. You should always assign an id for your service.
    *
-   * Here is an example of TXT record for a parent service:
+   * Here is an example of TXT record for a parent service: (assuming `idSelector` is `serialnumber`)
    * {
    *   path: '/',
    *   serialnumber: 'parent-uuid'
@@ -262,12 +267,12 @@ export default class ServiceDiscovery {
    * @param  {Object} props Child service properties (refer to serviceDiscoveryProps()).
    * @return {Object}       Child service object with start() and stop() methods.
    */
-  createChildService(props) {
-    const configs = this.datasource.serviceDiscoveryConfigs();
-    const parentProps = this.datasource.serviceDiscoveryProps();
-    const child = new ChildService(configs, props, parentProps);
-    this.children.push(child);
-    return child;
+  createChildService (props) {
+    const configs = this.datasource.serviceDiscoveryConfigs()
+    const parentProps = this.datasource.serviceDiscoveryProps()
+    const child = new ChildService(configs, props, parentProps)
+    this.children.push(child)
+    return child
   }
 
   /**
@@ -276,16 +281,17 @@ export default class ServiceDiscovery {
    * @method stop
    * @return {Promise} A promise of the result of the terminate process.
    */
-  async stop() {
-    await this.delegate.serviceDiscoveryWillStop();
-    await Promise.all(this.children.map(child => child.stop()));
-    await this.bonjour.stop();
-    await this.mqttsd.stop();
-    delete this.bonjour;
-    delete this.mqttsd;
-    await this.delegate.serviceDiscoveryDidStop();
+  async stop () {
+    await this.delegate.serviceDiscoveryWillStop()
+    await Promise.all(this.children.map(child => child.stop()))
+    await this.bonjour.stop()
+    await this.mqttsd.stop()
+    delete this.bonjour
+    delete this.mqttsd
+    await this.delegate.serviceDiscoveryDidStop()
   }
 }
 
-export Bonjour from './backend/bonjour';
-export MQTTSD from './backend/mqttsd';
+exports.Bonjour = Bonjour
+exports.MQTTSD = MQTTSD
+module.exports = ServiceDiscovery

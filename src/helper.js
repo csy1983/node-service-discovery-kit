@@ -1,6 +1,6 @@
-import { STATUS_UP } from './constants';
+const { STATUS_UP } = require('./constants')
 
-export function findSerialNumber(service) {
+function findSerialNumber (service) {
   return service.txt ? (
     service.txt.serialnumber ||
     service.txt.Serialnumber ||
@@ -18,56 +18,60 @@ export function findSerialNumber(service) {
     service.txt.Deviceid ||
     service.txt.DeviceId ||
     service.txt.DeviceID || ''
-  ) : '';
+  ) : ''
 }
 
-export function defaultComparator(service, searchKey, searchValue) {
+function defaultComparator (service, searchKey, searchValue) {
   switch (searchKey) {
     case 'addresses':
     case 'subtypes':
-      return service[searchKey].indexOf(searchValue) >= 0;
+      return service[searchKey].indexOf(searchValue) >= 0
     case 'devicetype':
-      return (service.txt && (service.txt.devicetype || service.txt.DeviceType) === searchValue);
+      return (service.txt && (service.txt.devicetype || service.txt.DeviceType) === searchValue)
     case 'serialnumber':
-      return findSerialNumber(service).toLowerCase() === searchValue.toLowerCase();
+      return findSerialNumber(service).toLowerCase() === searchValue.toLowerCase()
     case 'workgroup':
-      return (service.txt && (service.txt.workgroup || service.txt.Workgroup) === searchValue);
+      return (service.txt && (service.txt.workgroup || service.txt.Workgroup) === searchValue)
     case 'name':
     case 'fqdn':
     case 'host':
     case 'type':
     case 'protocol':
     case 'status':
-      return service[searchKey].toLowerCase() === searchValue.toLowerCase();
+      return service[searchKey].toLowerCase() === searchValue.toLowerCase()
     case 'port':
-      return service.port === searchValue;
+      return service.port === searchValue
     default:
-      return false;
+      return false
   }
 }
 
-export function findServiceHelper(serviceMap = {}, matches = {}, comparator = defaultComparator) {
-  const services = [];
+function findServiceHelper (serviceMap = {}, matches = {}, comparator = defaultComparator) {
+  const services = []
 
   /* Default returns online service only */
   if (matches.status === undefined) {
-    matches.status = STATUS_UP;
+    matches.status = STATUS_UP
   }
 
   Object.keys(serviceMap).forEach((addr) => {
     serviceMap[addr].forEach((srv) => {
       if (Object.keys(matches).length === 0) {
-        services.push(srv);
+        services.push(srv)
       } else {
         const found = Object.keys(matches)
           .map(key => comparator(srv, key, matches[key]))
-          .reduce((prev, curr) => prev && curr);
+          .reduce((prev, curr) => prev && curr)
         if (found) {
-          services.push(srv);
+          services.push(srv)
         }
       }
-    });
-  });
+    })
+  })
 
-  return services;
+  return services
 }
+
+exports.findSerialNumber = findSerialNumber
+exports.defaultComparator = defaultComparator
+exports.findServiceHelper = findServiceHelper

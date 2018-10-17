@@ -1,9 +1,8 @@
-import EventEmitter from 'events';
-import autobind from 'autobind-decorator';
-import bonjour from 'bonjour';
-import ip from 'ip';
-import { STATUS_UP, STATUS_DOWN } from '../constants';
-import { findServiceHelper } from '../helper';
+const EventEmitter = require('events')
+const bonjour = require('bonjour')
+const ip = require('ip')
+const { STATUS_UP, STATUS_DOWN } = require('../constants')
+const { findServiceHelper } = require('../helper')
 
 /**
  * Service discovery using Bonjour.
@@ -11,8 +10,7 @@ import { findServiceHelper } from '../helper';
  * @constructor
  * @extends EventEmitter
  */
-@autobind
-export default class Bonjour extends EventEmitter {
+class Bonjour extends EventEmitter {
   /**
    * Construct and configure a Bonjour instance.
    *
@@ -21,12 +19,19 @@ export default class Bonjour extends EventEmitter {
    *   browse: {Boolean} if true, browse network services before publish service on start(); otherwise, do publish only. (Default: false)
    * }
    */
-  constructor(configs = {}) {
-    super();
-    this.bonjour = bonjour();
-    this.configs = configs;
-    this.props = {};
-    this.serviceMap = {}; // To store discovered services referred by its ip address as key
+  constructor (configs = {}) {
+    super()
+    this.bonjour = bonjour()
+    this.configs = configs
+    this.props = {}
+    this.serviceMap = {} // To store discovered services referred by its ip address as key
+    this.start = this.start.bind(this)
+    this.stop = this.stop.bind(this)
+    this.browse = this.browse.bind(this)
+    this.publish = this.publish.bind(this)
+    this.setProps = this.setProps.bind(this)
+    this.updateProps = this.updateProps.bind(this)
+    this.findService = this.findService.bind(this)
   }
 
   /**
@@ -35,12 +40,12 @@ export default class Bonjour extends EventEmitter {
    * @method start
    * @return {Promise} A promise of the result of start process.
    */
-  start() {
+  start () {
     return new Promise((resolve) => {
-      if (this.configs.browse) this.browse();
-      this.publish();
-      resolve();
-    });
+      if (this.configs.browse) this.browse()
+      this.publish()
+      resolve()
+    })
   }
 
   /**
@@ -49,13 +54,13 @@ export default class Bonjour extends EventEmitter {
    * @method stop
    * @return {Promise} A promise of the result of stop process.
    */
-  stop() {
+  stop () {
     return new Promise((resolve) => {
       this.bonjour.unpublishAll(() => {
         // this.bonjour.destroy();
-        resolve();
-      });
-    });
+        resolve()
+      })
+    })
   }
 
   /**
@@ -65,29 +70,29 @@ export default class Bonjour extends EventEmitter {
    * @method browse
    * @private
    */
-  browse() {
+  browse () {
     return this.bonjour.find({ type: this.props.type })
-    .on('up', (service) => {
-      const addrs = this.findAddresses(service);
-      if (addrs) {
-        service.addresses = addrs;
-        service.status = STATUS_UP;
-        service.timestamp = Date.now();
-        this.serviceMap[addrs[0]] = (this.serviceMap[addrs[0]] || []).filter(serv => serv.fqdn !== service.fqdn);
-        this.serviceMap[addrs[0]].push(service);
-        this.emit('event', { action: STATUS_UP, data: service });
-      }
-    })
-    .on('down', (service) => {
-      const addrs = this.findAddresses(service);
-      if (addrs) {
-        service.status = STATUS_DOWN;
-        service.timestamp = Date.now();
-        this.serviceMap[addrs[0]] = (this.serviceMap[addrs[0]] || []).filter(serv => serv.fqdn !== service.fqdn);
-        this.serviceMap[addrs[0]].push(service);
-        this.emit('event', { action: STATUS_DOWN, data: service });
-      }
-    });
+      .on('up', (service) => {
+        const addrs = this.findAddresses(service)
+        if (addrs) {
+          service.addresses = addrs
+          service.status = STATUS_UP
+          service.timestamp = Date.now()
+          this.serviceMap[addrs[0]] = (this.serviceMap[addrs[0]] || []).filter(serv => serv.fqdn !== service.fqdn)
+          this.serviceMap[addrs[0]].push(service)
+          this.emit('event', { action: STATUS_UP, data: service })
+        }
+      })
+      .on('down', (service) => {
+        const addrs = this.findAddresses(service)
+        if (addrs) {
+          service.status = STATUS_DOWN
+          service.timestamp = Date.now()
+          this.serviceMap[addrs[0]] = (this.serviceMap[addrs[0]] || []).filter(serv => serv.fqdn !== service.fqdn)
+          this.serviceMap[addrs[0]].push(service)
+          this.emit('event', { action: STATUS_DOWN, data: service })
+        }
+      })
   }
 
   /**
@@ -95,13 +100,13 @@ export default class Bonjour extends EventEmitter {
    *
    * @method publish
    */
-  publish() {
+  publish () {
     if (this.bonjourService && this.bonjourService.published) {
       this.bonjourService.stop(() => {
-        this.bonjourService = this.bonjour.publish(this.props);
-      });
+        this.bonjourService = this.bonjour.publish(this.props)
+      })
     } else if (this.props.name && this.props.port && this.props.type) {
-      this.bonjourService = this.bonjour.publish(this.props);
+      this.bonjourService = this.bonjour.publish(this.props)
     }
   }
 
@@ -112,8 +117,8 @@ export default class Bonjour extends EventEmitter {
    * @param {Object} props A service object with properties.
    * (Refer to serviceDiscoveryProps() in delegate.js)
    */
-  setProps(props = {}) {
-    Object.assign(this.props, props);
+  setProps (props = {}) {
+    Object.assign(this.props, props)
   }
 
   /**
@@ -122,38 +127,40 @@ export default class Bonjour extends EventEmitter {
    * @method updateProps
    * @param {Object} props A service object with only properties to be updated.
    */
-  updateProps(props) {
-    Object.assign(this.props, props);
+  updateProps (props) {
+    Object.assign(this.props, props)
   }
 
   /**
-   * Find addresses of the machine from its bonjour service.
+   * Find addresses of the machine = require(its bonjour service.
    *
    * @method findAddresses
    * @private
    * @param  {Object} service A bonjour service object.
    * @return {Array}          Addresses in an array.
    */
-  findAddresses(service) {
-    const addresses = service.addresses.filter(addr => ip.isV4Format(addr));
+  findAddresses (service) {
+    const addresses = service.addresses.filter(addr => ip.isV4Format(addr))
     if (addresses.length === 0) {
       if (service.referer && service.referer.address) {
-        return [service.referer.address];
+        return [service.referer.address]
       }
-      return null;
+      return null
     }
-    return addresses;
+    return addresses
   }
 
   /**
-   * Find services from Bonjour service browser.
+   * Find services = require(Bonjour service browser.
    *
    * @method findService
    * @param {Object} matches An object contains properties to match the service.
    * @param {Function} comparator A custom helper function to compare the `matches` with service.
    * @return {Array} All matched service objects in an array.
    */
-  findService(matches, comparator) {
-    return findServiceHelper(this.serviceMap, matches, comparator);
+  findService (matches, comparator) {
+    return findServiceHelper(this.serviceMap, matches, comparator)
   }
 }
+
+module.exports = Bonjour

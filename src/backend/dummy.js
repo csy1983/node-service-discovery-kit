@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import EventEmitter from 'events';
+const EventEmitter = require('events')
 
 /**
  * Dummy service discovery.
@@ -7,15 +7,17 @@ import EventEmitter from 'events';
  * @constructor
  * @extends EventEmitter
  */
-export default class Dummy extends EventEmitter {
-  start() {
-    return new Promise(resolve => resolve());
+class Dummy extends EventEmitter {
+  start () {
+    return new Promise(resolve => resolve())
   }
-  stop() {
-    return new Promise(resolve => resolve());
+  stop () {
+    return new Promise(resolve => resolve())
   }
-  publish() {}
-  setProps(props = {}) {}
-  updateProps(props) {}
-  findService(matches, comparator) { return []; }
+  publish () {}
+  setProps (props = {}) {}
+  updateProps (props) {}
+  findService (matches, comparator) { return [] }
 }
+
+module.exports = Dummy

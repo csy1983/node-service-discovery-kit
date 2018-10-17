@@ -1,4 +1,4 @@
-export default class ServiceDiscoveryDataSource {
+class ServiceDiscoveryDataSource {
   /**
    * Return service discovery configurations for the delegator to configure what
    * methods of service discovery are going to use.
@@ -13,8 +13,8 @@ export default class ServiceDiscoveryDataSource {
    *   }
    * }
    */
-  serviceDiscoveryConfigs() {
-    return {};
+  serviceDiscoveryConfigs () {
+    return {}
   }
 
   /**
@@ -38,7 +38,9 @@ export default class ServiceDiscoveryDataSource {
    *   }
    * }
    */
-  serviceDiscoveryProps() {
-    return {};
+  serviceDiscoveryProps () {
+    return {}
   }
 }
+
+module.exports = ServiceDiscoveryDataSource
