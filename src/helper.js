@@ -38,7 +38,6 @@ export function defaultComparator(service, searchKey, searchValue) {
     case 'type':
     case 'protocol':
     case 'port':
-      return service.port === searchValue;
     default:
       return service[searchKey] === searchValue;
   }
