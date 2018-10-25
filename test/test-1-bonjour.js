@@ -1,4 +1,5 @@
 /* eslint-disable no-undef, prefer-arrow-callback, func-names, space-before-function-paren */
+const assert = require('assert')
 const debug = require('debug')
 const { STATUS_UP, STATUS_DOWN } = require('../src/constants')
 const EchoServer = require('./echo-server')
@@ -93,8 +94,8 @@ describe('EchoServer with Bonjour', function() {
     it('should return 2 echo-test services', function(done) {
       const services = echoServer.findService()
       DEBUG(services)
-      if (services.length === 2) done()
-      else done(services)
+      assert.equal(services.length, 2)
+      done()
     })
   })
 
@@ -113,8 +114,8 @@ describe('EchoServer with Bonjour', function() {
     it('should return 1 online echo-test service', function(done) {
       const services = echoServer.findService()
       DEBUG(services)
-      if (services.length === 1) done()
-      else done(services)
+      assert.equal(services.length, 1)
+      done()
     })
   })
 
@@ -125,8 +126,9 @@ describe('EchoServer with Bonjour', function() {
         serialnumber: 'child-12345678'
       })
       DEBUG(services)
-      if (services.length === 1 && services[0].status === STATUS_DOWN) done()
-      else done(services)
+      assert.equal(services.length, 1)
+      assert.equal(services[0].status, STATUS_DOWN)
+      done()
     })
   })
 

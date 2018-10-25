@@ -132,8 +132,8 @@ describe('EchoServer with MQTTSD', function() {
     it('should return with 2 echo-test services', function(done) {
       const services = echoServer.findService()
       DEBUG(services)
-      if (services.length === 2) done()
-      else done(services)
+      assert.equal(services.length, 2)
+      done()
     })
   })
 
@@ -152,8 +152,8 @@ describe('EchoServer with MQTTSD', function() {
     it('should return 1 online echo-test service', function(done) {
       const services = echoServer.findService()
       DEBUG(services)
-      if (services.length === 1) done()
-      else done(services)
+      assert.equal(services.length, 1)
+      done()
     })
   })
 
@@ -164,8 +164,9 @@ describe('EchoServer with MQTTSD', function() {
         serialnumber: 'child-12345678'
       })
       DEBUG(services)
-      if (services.length === 1 && services[0].status === STATUS_DOWN) done()
-      else done(services)
+      assert.equal(services.length, 1)
+      assert.equal(services[0].status, STATUS_DOWN)
+      done()
     })
   })
 
