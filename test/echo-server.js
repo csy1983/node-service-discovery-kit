@@ -74,6 +74,7 @@ export default class EchoServer extends ServiceDiscovery {
       bonjour: true,
       mqttsd: {
         brokerURL: 'localhost',
+        browse: true,
       },
     };
   }

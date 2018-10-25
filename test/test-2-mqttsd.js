@@ -17,6 +17,7 @@ class EchoServerWithMQTTSD extends EchoServer {
     return {
       mqttsd: {
         brokerURL: 'localhost',
+        browse: true,
         options: {
           connectTimeout: 1000,
         }
