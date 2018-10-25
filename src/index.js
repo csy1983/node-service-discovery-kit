@@ -164,7 +164,7 @@ class ServiceDiscovery {
     else if (!props.txt.path) props.txt.path = '/'
     this.bonjour.updateProps(props)
     this.mqttsd.updateProps(props)
-    this.publishService()
+    this.publishService({ propsUpdated: true })
   }
 
   /**
@@ -172,9 +172,9 @@ class ServiceDiscovery {
    *
    * @method publishService
    */
-  publishService () {
-    this.bonjour.publish()
-    this.mqttsd.publish()
+  publishService (options = {}) {
+    this.bonjour.publish(options)
+    this.mqttsd.publish(options)
     this.children.forEach((child) => {
       child.stop().then(() => child.start())
     })

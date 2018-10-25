@@ -170,12 +170,26 @@ class MQTTSD extends EventEmitter {
     }
 
     if (this.props.name && this.props.port && this.props.type) {
-      this.address = ip.address()
-      this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
-        addresses: [this.address],
-        fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
-        status: STATUS_UP
-      })), MQTTSD_QOS)
+      if (options.propsUpdated) {
+        this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.prevProps, {
+          addresses: [this.address],
+          status: STATUS_DOWN
+        })), MQTTSD_QOS, () => {
+          this.address = ip.address()
+          this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
+            addresses: [this.address],
+            fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
+            status: STATUS_UP
+          })), MQTTSD_QOS)
+        })
+      } else {
+        this.address = ip.address()
+        this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
+          addresses: [this.address],
+          fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
+          status: STATUS_UP
+        })), MQTTSD_QOS)
+      }
     }
   }
 
