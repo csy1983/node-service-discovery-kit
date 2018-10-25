@@ -40,7 +40,7 @@ function defaultComparator (service, searchKey, searchValue) {
     case 'port':
       return service.port === searchValue
     default:
-      return false
+      return service[searchKey] === searchValue
   }
 }
 
