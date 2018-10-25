@@ -134,14 +134,18 @@ class MQTTSD extends EventEmitter {
           // Received a query message from server, do publish() for ack
           clearTimeout(this.responseQueryTimer)
           this.responseQueryTimer = setTimeout(() => {
-            this.publish()
+            if (this.configs.browse) {
+              this.publish({ queryId: this.mqtt.options.clientId })
+            } else {
+              this.publish()
+            }
           }, MQTTSD_QUERY_RESPONSE_DELAY)
         }
       } else if (this.configs.browse && topic === MQTTSD_TOPIC) {
         const service = JSON.parse(message.toString())
         const addr = service.addresses[0]
 
-        if (!addr || !service.txt) return
+        if (!addr) return
 
         service.timestamp = Date.now()
 
