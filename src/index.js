@@ -128,7 +128,7 @@ class ServiceDiscovery {
 
     if (configs.mqttsd) {
       this.mqttsd = new MQTTSD({
-        browse: true,
+        browse: configs.mqttsd.browse,
         brokerURL: configs.mqttsd.brokerURL,
         options: configs.mqttsd.options,
         idSelector: configs.idSelector

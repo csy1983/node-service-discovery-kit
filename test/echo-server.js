@@ -79,7 +79,8 @@ class EchoServer extends ServiceDiscovery {
     return {
       bonjour: true,
       mqttsd: {
-        brokerURL: 'localhost'
+        brokerURL: 'localhost',
+        browse: true
       }
     }
   }
