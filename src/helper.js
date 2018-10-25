@@ -37,12 +37,10 @@ export function defaultComparator(service, searchKey, searchValue) {
     case 'host':
     case 'type':
     case 'protocol':
-    case 'status':
-      return service[searchKey].toLowerCase() === searchValue.toLowerCase();
     case 'port':
       return service.port === searchValue;
     default:
-      return false;
+      return service[searchKey] === searchValue;
   }
 }
 
