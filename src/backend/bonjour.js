@@ -95,7 +95,7 @@ export default class Bonjour extends EventEmitter {
    *
    * @method publish
    */
-  publish() {
+  publish(options = {}) {
     if (this.bonjourService && this.bonjourService.published) {
       this.bonjourService.stop(() => {
         this.bonjourService = this.bonjour.publish(this.props);

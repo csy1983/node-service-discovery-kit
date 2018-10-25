@@ -165,7 +165,7 @@ export default class MQTTSD extends EventEmitter {
     }
 
     if (this.props.name && this.props.port && this.props.type) {
-      if (this.address) {
+      if (options.propsUpdated) {
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.prevProps, {
           addresses: [this.address],
           status: STATUS_DOWN,
