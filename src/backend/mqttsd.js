@@ -129,11 +129,7 @@ export default class MQTTSD extends EventEmitter {
           // Received a query message from server, do publish() for ack
           clearTimeout(this.responseQueryTimer);
           this.responseQueryTimer = setTimeout(() => {
-            if (this.configs.browse) {
-              this.publish({ queryId: this.mqtt.options.clientId });
-            } else {
-              this.publish();
-            }
+            this.publish();
           }, MQTTSD_QUERY_RESPONSE_DELAY);
         }
       } else if (this.configs.browse && topic === MQTTSD_TOPIC) {
