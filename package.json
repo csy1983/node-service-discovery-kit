@@ -1,6 +1,6 @@
 {
   "name": "node-service-discovery-kit",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "description": "A node.js class providing service discovery functionalities for your service using Bonjour and MQTT.",
   "main": "dist/index.js",
   "dependencies": {
@@ -42,6 +42,7 @@
     "url": "https://github.com/csy1983/node-service-discovery-kit.git"
   },
   "scripts": {
+    "build": "./node_modules/.bin/webpack -p",
     "test": "./node_modules/.bin/mocha -b --require babel-core/register --require babel-polyfill --exit",
     "cover": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --require babel-core/register --require babel-polyfill --exit"
   }

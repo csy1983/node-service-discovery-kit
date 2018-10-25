@@ -30,6 +30,7 @@ export default class MQTTSD extends EventEmitter {
    */
   constructor(configs) {
     super();
+    this.status = 'offline';
     this.configs = configs || {};
     this.props = {
       protocol: 'tcp',
@@ -52,28 +53,24 @@ export default class MQTTSD extends EventEmitter {
       this.mqtt = mqtt.connect(`mqtt://${this.configs.brokerURL}`, this.configs.options);
       this.browse();
       this.mqtt.on('connect', () => {
+        this.status = 'connect';
         this.mqtt.subscribe(MQTTSD_QUERY_TOPIC, MQTTSD_QOS, () => {
           if (this.configs.browse) {
             this.mqtt.subscribe(MQTTSD_TOPIC, MQTTSD_QOS, () => {
               this.publish({ queryId: this.mqtt.options.clientId });
-              resolve();
             });
           } else {
             this.publish();
-            resolve();
           }
         });
       });
 
-      this.mqtt.on('error', (error) => {
-        resolve({
-          status: 'error',
-          error,
-        });
+      this.mqtt.on('error', (error) => { // eslint-disable-line
+        this.status = 'error'
       });
 
       this.mqtt.on('reconnect', () => {
-        resolve({ status: 'reconnect' });
+        this.status = 'reconnect';
       });
 
       this.mqtt.on('close', () => {
@@ -81,8 +78,11 @@ export default class MQTTSD extends EventEmitter {
       });
 
       this.mqtt.on('offline', () => {
+        this.status = 'offline';
         this.mqtt.unsubscribe([MQTTSD_QUERY_TOPIC, MQTTSD_TOPIC]);
       });
+
+      resolve();
     });
   }
 
@@ -126,6 +126,7 @@ export default class MQTTSD extends EventEmitter {
         const data = JSON.parse(message.toString());
 
         if (data && data.queryId !== this.mqtt.options.clientId) {
+          // Received a query message from server, do publish() for ack
           clearTimeout(this.responseQueryTimer);
           this.responseQueryTimer = setTimeout(() => {
             this.publish();
@@ -140,11 +141,11 @@ export default class MQTTSD extends EventEmitter {
         service.timestamp = Date.now();
 
         if (service.status === STATUS_UP) {
-          this.serviceMap[addr] = (this.serviceMap[addr] || []).filter(srv => srv.txt.serialnumber !== service.txt.serialnumber);
+          this.serviceMap[addr] = (this.serviceMap[addr] || []).filter(srv => srv.fqdn !== service.fqdn);
           this.serviceMap[addr].push(service);
           this.emit('event', { action: STATUS_UP, data: service });
         } else if (service.status === STATUS_DOWN) {
-          this.serviceMap[addr] = (this.serviceMap[addr] || []).filter(srv => srv.txt.serialnumber !== service.txt.serialnumber);
+          this.serviceMap[addr] = (this.serviceMap[addr] || []).filter(srv => srv.fqdn !== service.fqdn);
           this.serviceMap[addr].push(service);
           this.emit('event', { action: STATUS_DOWN, data: service });
         }

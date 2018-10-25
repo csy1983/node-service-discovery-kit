@@ -17,6 +17,9 @@ class EchoServerWithMQTTSD extends EchoServer {
     return {
       mqttsd: {
         brokerURL: 'localhost',
+        options: {
+          connectTimeout: 1000,
+        }
       },
     };
   }
@@ -39,18 +42,30 @@ describe('EchoServer with MQTTSD', function() {
   let mqttBroker;
   let childService;
 
-  this.timeout(5000);
+  this.timeout(10000);
 
   describe('#start()', function() {
     it('should attempt to reconnect because MQTT broker is not ready', function(done) {
-      echoServer.start()
-        .then(({ mqttsd }) => echoServer.testClientStatus(mqttsd.status, 'reconnect', done))
-        .catch(done);
+      echoServer.start();
+      setTimeout(() => {
+        echoServer.testClientStatus(echoServer.mqttsd.status, 'reconnect', done);
+      }, 5000);
     });
 
     it('should establish connection to MQTT broker and publish itelf via MQTTSD', function(done) {
       mqttBroker = new mosca.Server();
       mqttBroker.on('error', error => assert(false, error));
+      mqttBroker.on('clientConnected', (client) => {
+        // console.log('Client Connected:', client.id);
+      });
+      mqttBroker.on('clientDisconnected', (client) => {
+        // console.log('Client Disconnected:', client.id);
+      });
+      mqttBroker.on('published', (packet, client) => {
+        // if (packet.topic === 'mqttsd') {
+        //   console.log(JSON.parse(packet.payload.toString()));
+        // }
+      })
       echoServer.addEventTestObject({ protocol: 'mqttsd', action: STATUS_UP }, done);
     });
   });

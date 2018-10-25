@@ -109,7 +109,7 @@ export default class ServiceDiscovery {
     else if (!props.txt.path) props.txt.path = '/';
 
     if (configs.bonjour) {
-      this.bonjour = new Bonjour({ browse: true });
+      this.bonjour = new Bonjour({ browse: true, idSelector: configs.idSelector });
     } else {
       this.bonjour = this.dummy;
     }
@@ -125,6 +125,7 @@ export default class ServiceDiscovery {
         browse: true,
         brokerURL: configs.mqttsd.brokerURL,
         options: configs.mqttsd.options,
+        idSelector: configs.idSelector,
       });
     } else {
       this.mqttsd = this.dummy;
@@ -138,10 +139,9 @@ export default class ServiceDiscovery {
 
     this.bonjour.setProps(props);
     this.mqttsd.setProps(props);
-    let bonjour = await this.bonjour.start();
-    let mqttsd = await this.mqttsd.start();
+    await this.bonjour.start();
+    await this.mqttsd.start();
     await this.delegate.serviceDiscoveryDidStart();
-    return { bonjour, mqttsd };
   }
 
   /**
