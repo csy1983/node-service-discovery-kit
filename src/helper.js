@@ -60,7 +60,10 @@ export function findServiceHelper(serviceMap = {}, matches = {}, comparator = de
         services.push(srv);
       } else {
         const found = Object.keys(matches)
-          .map(key => comparator(srv, key, matches[key]))
+          .map(key => (
+            (matches.status.toLowerCase() === srv.status.toLowerCase()) &&
+            comparator(srv, key, matches[key])
+          ))
           .reduce((prev, curr) => prev && curr);
         if (found) {
           services.push(srv);
