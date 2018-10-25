@@ -37,8 +37,6 @@ function defaultComparator (service, searchKey, searchValue) {
     case 'host':
     case 'type':
     case 'protocol':
-    case 'status':
-      return service[searchKey].toLowerCase() === searchValue.toLowerCase()
     case 'port':
       return service.port === searchValue
     default:
@@ -60,7 +58,10 @@ function findServiceHelper (serviceMap = {}, matches = {}, comparator = defaultC
         services.push(srv)
       } else {
         const found = Object.keys(matches)
-          .map(key => comparator(srv, key, matches[key]))
+          .map(key => (
+            (matches.status.toLowerCase() === srv.status.toLowerCase()) &&
+            comparator(srv, key, matches[key])
+          ))
           .reduce((prev, curr) => prev && curr)
         if (found) {
           services.push(srv)
