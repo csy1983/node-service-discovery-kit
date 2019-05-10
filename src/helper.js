@@ -1,3 +1,5 @@
+import defaultGateway from 'default-gateway';
+import ip from 'ip';
 import { STATUS_UP } from './constants';
 
 export function findSerialNumber(service) {
@@ -70,4 +72,13 @@ export function findServiceHelper(serviceMap = {}, matches = {}, comparator = de
   });
 
   return services;
+}
+
+export function ipaddr() {
+  try {
+    const iface = defaultGateway.v4.sync().interface;
+    return ip.address(iface);
+  } catch (error) {
+      return ip.address();
+  }
 }

@@ -3,7 +3,7 @@ import autobind from 'autobind-decorator';
 import bonjour from 'bonjour';
 import ip from 'ip';
 import { STATUS_UP, STATUS_DOWN } from '../constants';
-import { findServiceHelper } from '../helper';
+import { findServiceHelper, ipaddr } from '../helper';
 
 /**
  * Service discovery using Bonjour.
@@ -23,7 +23,7 @@ export default class Bonjour extends EventEmitter {
    */
   constructor(configs = {}) {
     super();
-    this.bonjour = bonjour();
+    this.bonjour = bonjour({ interface: ipaddr() });
     this.configs = configs;
     this.props = {};
     this.serviceMap = {}; // To store discovered services referred by its ip address as key

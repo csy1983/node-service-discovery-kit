@@ -1,24 +1,13 @@
 import EventEmitter from 'events';
 import autobind from 'autobind-decorator';
-import defaultGateway from 'default-gateway';
-import ip from 'ip';
 import mqtt from 'mqtt';
 import { STATUS_UP, STATUS_DOWN } from '../constants';
-import { findServiceHelper } from '../helper';
+import { findServiceHelper, ipaddr } from '../helper';
 
 const MQTTSD_QUERY_TOPIC = 'mqttsd-query';
 const MQTTSD_TOPIC = 'mqttsd';
 const MQTTSD_QOS = { qos: 1 };
 const MQTTSD_QUERY_RESPONSE_DELAY = 5000;
-
-function ipaddr() {
-  try {
-    const iface = defaultGateway.v4.sync().interface;
-    return ip.address(iface);
-  } catch (error) {
-      return ip.address();
-  }
-}
 
 /**
  * Service discovery using MQTT.
