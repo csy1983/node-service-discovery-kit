@@ -54,7 +54,8 @@ export function findServiceHelper(serviceMap = {}, matches = {}, comparator = de
   }
 
   Object.keys(serviceMap).forEach((addr) => {
-    serviceMap[addr].forEach((srv) => {
+    serviceMap[addr].forEach((_srv) => {
+      const srv = JSON.parse(JSON.stringify(_srv));
       if (Object.keys(matches).length === 0) {
         services.push(srv);
       } else {

@@ -29,6 +29,7 @@ export default class MQTTSD extends EventEmitter {
    */
   constructor(configs) {
     super();
+    this.address = ipaddr();
     this.status = 'offline';
     this.configs = configs || {};
     this.props = {
@@ -133,9 +134,9 @@ export default class MQTTSD extends EventEmitter {
         }
       } else if (this.configs.browse && topic === MQTTSD_TOPIC) {
         const service = JSON.parse(message.toString());
-        const addr = service.addresses[0];
+        const addr = service.addresses.sort((addr1, addr2) => +(addr1 === this.ipaddr) < +(addr2 === this.ipaddr))[0];
 
-        if (!addr) return;
+        if (service.addresses.length === 0) return;
 
         service.timestamp = Date.now();
 
@@ -169,7 +170,6 @@ export default class MQTTSD extends EventEmitter {
           addresses: [this.address],
           status: STATUS_DOWN,
         })), MQTTSD_QOS, () => {
-          this.address = ipaddr();
           this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
             addresses: [this.address],
             fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
@@ -177,7 +177,6 @@ export default class MQTTSD extends EventEmitter {
           })), MQTTSD_QOS);
         });
       } else {
-        this.address = ipaddr();
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
           addresses: [this.address],
           fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,

@@ -23,7 +23,8 @@ export default class Bonjour extends EventEmitter {
    */
   constructor(configs = {}) {
     super();
-    this.bonjour = bonjour({ interface: ipaddr() });
+    this.ipaddr = ipaddr();
+    this.bonjour = bonjour({ interface: this.ipaddr });
     this.configs = configs;
     this.props = {};
     this.serviceMap = {}; // To store discovered services referred by its ip address as key
@@ -135,7 +136,9 @@ export default class Bonjour extends EventEmitter {
    * @return {Array}          Addresses in an array.
    */
   findAddresses(service) {
-    const addresses = service.addresses.filter(addr => ip.isV4Format(addr));
+    const addresses = service.addresses
+      .filter(addr => ip.isV4Format(addr))
+      .sort((addr1, addr2) => +(addr1 === this.ipaddr) < +(addr2 === this.ipaddr));
     if (addresses.length === 0) {
       if (service.referer && service.referer.address) {
         return [service.referer.address];
