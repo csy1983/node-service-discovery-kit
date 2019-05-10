@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
 import autobind from 'autobind-decorator';
+import defaultGateway from 'default-gateway';
 import ip from 'ip';
 import mqtt from 'mqtt';
 import { STATUS_UP, STATUS_DOWN } from '../constants';
@@ -9,6 +10,15 @@ const MQTTSD_QUERY_TOPIC = 'mqttsd-query';
 const MQTTSD_TOPIC = 'mqttsd';
 const MQTTSD_QOS = { qos: 1 };
 const MQTTSD_QUERY_RESPONSE_DELAY = 5000;
+
+function ipaddr() {
+  try {
+    const iface = defaultGateway.v4.sync().interface;
+    return ip.address(iface);
+  } catch (error) {
+      return ip.address();
+  }
+}
 
 /**
  * Service discovery using MQTT.
@@ -170,7 +180,7 @@ export default class MQTTSD extends EventEmitter {
           addresses: [this.address],
           status: STATUS_DOWN,
         })), MQTTSD_QOS, () => {
-          this.address = ip.address();
+          this.address = ipaddr();
           this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
             addresses: [this.address],
             fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
@@ -178,7 +188,7 @@ export default class MQTTSD extends EventEmitter {
           })), MQTTSD_QOS);
         });
       } else {
-        this.address = ip.address();
+        this.address = ipaddr();
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
           addresses: [this.address],
           fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
