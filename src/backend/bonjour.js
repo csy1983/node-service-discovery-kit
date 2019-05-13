@@ -3,7 +3,7 @@ import autobind from 'autobind-decorator';
 import bonjour from 'bonjour';
 import ip from 'ip';
 import { STATUS_UP, STATUS_DOWN } from '../constants';
-import { findServiceHelper, ipaddr } from '../helper';
+import { findServiceHelper, networkInterface } from '../helper';
 
 /**
  * Service discovery using Bonjour.
@@ -23,8 +23,8 @@ export default class Bonjour extends EventEmitter {
    */
   constructor(configs = {}) {
     super();
-    this.ipaddr = ipaddr();
-    this.bonjour = bonjour({ interface: this.ipaddr });
+    this.networkInterface = networkInterface();
+    this.bonjour = bonjour(/* { networkInterface: this.ipaddr } */);
     this.configs = configs;
     this.props = {};
     this.serviceMap = {}; // To store discovered services referred by its ip address as key
@@ -124,6 +124,7 @@ export default class Bonjour extends EventEmitter {
    * @param {Object} props A service object with only properties to be updated.
    */
   updateProps(props) {
+    this.networkInterface = networkInterface();
     Object.assign(this.props, props);
   }
 
@@ -136,9 +137,11 @@ export default class Bonjour extends EventEmitter {
    * @return {Array}          Addresses in an array.
    */
   findAddresses(service) {
+    const { address, netmask } = this.networkInterface;
+    const subnet = ip.subnet(address, netmask);
     const addresses = service.addresses
       .filter(addr => ip.isV4Format(addr))
-      .sort((addr1, addr2) => +(addr1 === this.ipaddr) < +(addr2 === this.ipaddr));
+      .sort((addr1, addr2) => +(subnet.contains(addr1)) < +(subnet.contains(addr2)));
     if (addresses.length === 0) {
       if (service.referer && service.referer.address) {
         return [service.referer.address];

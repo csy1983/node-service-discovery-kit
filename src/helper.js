@@ -1,3 +1,4 @@
+import os from 'os';
 import defaultGateway from 'default-gateway';
 import ip from 'ip';
 import { STATUS_UP } from './constants';
@@ -75,11 +76,24 @@ export function findServiceHelper(serviceMap = {}, matches = {}, comparator = de
   return services;
 }
 
-export function ipaddr() {
+export function networkInterface() {
+  const ifaces = os.networkInterfaces();
   try {
-    const iface = defaultGateway.v4.sync().interface;
-    return ip.address(iface);
+    const gateway = defaultGateway.v4.sync().gateway;
+    for (let iface in ifaces) {
+      const found = ifaces[iface]
+        .filter(iface => iface.family === 'IPv4')
+        .find(({ address, netmask }) => ip.subnet(address, netmask).contains(gateway));
+      if (found) {
+        return {
+          address: found.address,
+          netmask: found.netmask,
+        };
+      }
+    }
+    return { address: ip.address(), netmask: ip.fromPrefixLen(24) };
   } catch (error) {
-      return ip.address();
+    console.error(error);
+    return { address: ip.address(), netmask: ip.fromPrefixLen(24) };
   }
 }

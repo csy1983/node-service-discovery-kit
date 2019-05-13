@@ -1,8 +1,9 @@
 import EventEmitter from 'events';
 import autobind from 'autobind-decorator';
 import mqtt from 'mqtt';
+import ip from 'ip';
 import { STATUS_UP, STATUS_DOWN } from '../constants';
-import { findServiceHelper, ipaddr } from '../helper';
+import { findServiceHelper, networkInterface } from '../helper';
 
 const MQTTSD_QUERY_TOPIC = 'mqttsd-query';
 const MQTTSD_TOPIC = 'mqttsd';
@@ -29,7 +30,7 @@ export default class MQTTSD extends EventEmitter {
    */
   constructor(configs) {
     super();
-    this.address = ipaddr();
+    this.networkInterface = networkInterface();
     this.status = 'offline';
     this.configs = configs || {};
     this.props = {
@@ -98,7 +99,7 @@ export default class MQTTSD extends EventEmitter {
       if (this.mqtt.connected) {
         const timeout = setTimeout(resolve, 5000);
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
-          addresses: [this.address],
+          addresses: [this.networkInterface.address],
           status: STATUS_DOWN,
         })), MQTTSD_QOS, () => {
           clearTimeout(timeout);
@@ -134,9 +135,14 @@ export default class MQTTSD extends EventEmitter {
         }
       } else if (this.configs.browse && topic === MQTTSD_TOPIC) {
         const service = JSON.parse(message.toString());
-        const addr = service.addresses.sort((addr1, addr2) => +(addr1 === this.ipaddr) < +(addr2 === this.ipaddr))[0];
 
-        if (service.addresses.length === 0) return;
+        if (service.addresses.length === 0) {
+          return;
+        }
+
+        const { address, netmask } = this.networkInterface;
+        const subnet = ip.subnet(address, netmask);
+        const addr = service.addresses.sort((addr1, addr2) => +(subnet.contains(addr1)) < +(subnet.contains(addr2)))[0];
 
         service.timestamp = Date.now();
 
@@ -167,18 +173,18 @@ export default class MQTTSD extends EventEmitter {
     if (this.props.name && this.props.port && this.props.type) {
       if (options.propsUpdated) {
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.prevProps, {
-          addresses: [this.address],
+          addresses: [this.prevNetworkInterface.address],
           status: STATUS_DOWN,
         })), MQTTSD_QOS, () => {
           this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
-            addresses: [this.address],
+            addresses: [this.networkInterface.address],
             fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
             status: STATUS_UP,
           })), MQTTSD_QOS);
         });
       } else {
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
-          addresses: [this.address],
+          addresses: [this.networkInterface.address],
           fqdn: `${this.props.name}._${this.props.type}._${this.props.protocol || 'tcp'}.local`,
           status: STATUS_UP,
         })), MQTTSD_QOS);
@@ -204,6 +210,8 @@ export default class MQTTSD extends EventEmitter {
    * @param {Object} props A service object with only properties to be updated.
    */
   updateProps(props) {
+    this.prevNetworkInterface = this.networkInterface;
+    this.networkInterface = networkInterface();
     this.prevProps = Object.assign({}, this.props);
     Object.assign(this.props, props);
   }

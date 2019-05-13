@@ -32,7 +32,7 @@ export default class EchoServer extends ServiceDiscovery {
   }
 
   setProps(props) {
-    this.props = Object.freeze(props);
+    this.props = props;
   }
 
   /**
