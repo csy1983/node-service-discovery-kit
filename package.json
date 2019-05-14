@@ -1,6 +1,6 @@
 {
   "name": "node-service-discovery-kit",
-  "version": "0.9.14",
+  "version": "0.9.15",
   "description": "A node.js class providing service discovery functionalities for your service using Bonjour and MQTT.",
   "main": "dist/index.js",
   "dependencies": {
@@ -9,7 +9,7 @@
     "bonjour": "^3.5.0",
     "default-gateway": "^4.2.0",
     "ip": "^1.1.5",
-    "mqtt": "^2.7.2"
+    "mqtt": "^2.18.8"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",

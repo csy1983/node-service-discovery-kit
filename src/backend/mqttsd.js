@@ -30,7 +30,6 @@ export default class MQTTSD extends EventEmitter {
    */
   constructor(configs) {
     super();
-    this.networkInterface = networkInterface();
     this.status = 'offline';
     this.configs = configs || {};
     this.props = {
@@ -51,6 +50,7 @@ export default class MQTTSD extends EventEmitter {
     return new Promise((resolve) => {
       if (!this.configs.brokerURL) return resolve();
 
+      this.networkInterface = networkInterface();
       this.mqtt = mqtt.connect(`mqtt://${this.configs.brokerURL}`, this.configs.options);
       this.browse();
       this.mqtt.on('connect', () => {
@@ -75,7 +75,7 @@ export default class MQTTSD extends EventEmitter {
       });
 
       this.mqtt.on('close', () => {
-        //
+        // TODO: maybe publish a service down msg using bonjour
       });
 
       this.mqtt.on('offline', () => {

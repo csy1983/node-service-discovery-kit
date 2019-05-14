@@ -97,10 +97,13 @@ export default class ServiceDiscovery {
    * Initiate the service discovery.
    *
    * @method start
+   * @param {Object} opts Options to launch service discovery framework
    * @return {Promise} A promise of the result of the initiate process.
    */
-  async start() {
-    await this.delegate.serviceDiscoveryWillStart();
+  async start(opts = {}) {
+    if (!opts.updateNetwork) {
+      await this.delegate.serviceDiscoveryWillStart();
+    }
 
     const configs = this.datasource.serviceDiscoveryConfigs();
     const props = this.datasource.serviceDiscoveryProps();
@@ -141,7 +144,30 @@ export default class ServiceDiscovery {
     this.mqttsd.setProps(props);
     await this.bonjour.start();
     await this.mqttsd.start();
-    await this.delegate.serviceDiscoveryDidStart();
+    if (!opts.updateNetwork) {
+      await this.delegate.serviceDiscoveryDidStart();
+    }
+  }
+
+  /**
+   * Terminate the service discovery.
+   *
+   * @method stop
+   * @param {Object} opts Options to stop service discovery framework.
+   * @return {Promise} A promise of the result of the terminate process.
+   */
+  async stop(opts = {}) {
+    if (!opts.updateNetwork) {
+      await this.delegate.serviceDiscoveryWillStop();
+    }
+    await Promise.all(this.children.map(child => child.stop()));
+    await this.bonjour.stop();
+    await this.mqttsd.stop();
+    delete this.bonjour;
+    delete this.mqttsd;
+    if (!opts.updateNetwork) {
+      await this.delegate.serviceDiscoveryDidStop();
+    }
   }
 
   /**
@@ -151,14 +177,21 @@ export default class ServiceDiscovery {
    * publishService() after this method is unnecessary.
    *
    * @method updateServiceProps
+   * @param {Object} opts Options to update service.
    */
-  updateServiceProps() {
+  async updateServiceProps(opts = {}) {
     const props = this.datasource.serviceDiscoveryProps();
     if (!props.txt) props.txt = { path: '/' };
     else if (!props.txt.path) props.txt.path = '/';
-    this.bonjour.updateProps(props);
-    this.mqttsd.updateProps(props);
-    this.publishService({ propsUpdated: true });
+
+    if (opts.updateNetwork) {
+      await this.stop(opts);
+      await this.start(opts);
+    } else {
+      this.bonjour.updateProps(props);
+      this.mqttsd.updateProps(props);
+      this.publishService({ propsUpdated: true });
+    }
   }
 
   /**
@@ -265,22 +298,6 @@ export default class ServiceDiscovery {
     const child = new ChildService(configs, props, parentProps);
     this.children.push(child);
     return child;
-  }
-
-  /**
-   * Terminate the service discovery.
-   *
-   * @method stop
-   * @return {Promise} A promise of the result of the terminate process.
-   */
-  async stop() {
-    await this.delegate.serviceDiscoveryWillStop();
-    await Promise.all(this.children.map(child => child.stop()));
-    await this.bonjour.stop();
-    await this.mqttsd.stop();
-    delete this.bonjour;
-    delete this.mqttsd;
-    await this.delegate.serviceDiscoveryDidStop();
   }
 }
 

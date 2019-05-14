@@ -23,8 +23,6 @@ export default class Bonjour extends EventEmitter {
    */
   constructor(configs = {}) {
     super();
-    this.networkInterface = networkInterface();
-    this.bonjour = bonjour(/* { networkInterface: this.ipaddr } */);
     this.configs = configs;
     this.props = {};
     this.serviceMap = {}; // To store discovered services referred by its ip address as key
@@ -38,6 +36,8 @@ export default class Bonjour extends EventEmitter {
    */
   start() {
     return new Promise((resolve) => {
+      this.networkInterface = networkInterface();
+      this.bonjour = bonjour({ interface: this.networkInterface.address });
       if (this.configs.browse) this.browse();
       this.publish();
       resolve();
@@ -53,8 +53,10 @@ export default class Bonjour extends EventEmitter {
   stop() {
     return new Promise((resolve) => {
       this.bonjour.unpublishAll(() => {
-        // this.bonjour.destroy();
-        resolve();
+        setTimeout(() => {
+          this.bonjour.destroy();
+          resolve();
+        }, 3000);
       });
     });
   }

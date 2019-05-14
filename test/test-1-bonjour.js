@@ -26,7 +26,7 @@ describe('EchoServer with Bonjour', function() {
   this.timeout(15000);
 
   describe('#start()', function() {
-    it('should start and publish itself via Bonjour without throwing error', function(done) {
+    it('should start and publish itself via Bonjour without error', function(done) {
       echoServer.addEventTestObject({ protocol: 'bonjour', action: STATUS_UP }, done);
       echoServer.start().catch(done);
     });
@@ -133,7 +133,7 @@ describe('EchoServer with Bonjour', function() {
   });
 
   describe('#stop()', function() {
-    it('should return without throwing error', function(done) {
+    it('should return without error', function(done) {
       echoServer.addEventTestObject({
         protocol: 'bonjour',
         action: STATUS_DOWN,

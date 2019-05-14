@@ -93,7 +93,9 @@ export function networkInterface() {
     }
     return { address: ip.address(), netmask: ip.fromPrefixLen(24) };
   } catch (error) {
-    console.error(error);
-    return { address: ip.address(), netmask: ip.fromPrefixLen(24) };
+    const address = ip.address();
+    const netmask = ip.fromPrefixLen(24);
+    console.log(`[ServiceDiscovery] ${error.message}. Roll back to ${address}`);
+    return { address, netmask };
   }
 }
