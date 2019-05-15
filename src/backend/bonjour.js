@@ -37,7 +37,7 @@ export default class Bonjour extends EventEmitter {
   start() {
     return new Promise((resolve) => {
       this.networkInterface = networkInterface();
-      this.bonjour = bonjour({ interface: this.networkInterface.address });
+      this.bonjour = bonjour(process.platform === 'win32' ? { interface: this.networkInterface.address } : {});
       if (this.configs.browse) this.browse();
       this.publish();
       resolve();
