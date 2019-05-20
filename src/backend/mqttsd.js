@@ -3,7 +3,7 @@ import autobind from 'autobind-decorator';
 import mqtt from 'mqtt';
 import ip from 'ip';
 import { STATUS_UP, STATUS_DOWN } from '../constants';
-import { findServiceHelper, networkInterface } from '../helper';
+import { filterService, findServiceHelper, networkInterface } from '../helper';
 
 const MQTTSD_QUERY_TOPIC = 'mqttsd-query';
 const MQTTSD_TOPIC = 'mqttsd';
@@ -147,11 +147,11 @@ export default class MQTTSD extends EventEmitter {
         service.timestamp = Date.now();
 
         if (service.status === STATUS_UP) {
-          this.serviceMap[addr] = (this.serviceMap[addr] || []).filter(srv => srv.fqdn !== service.fqdn);
+          this.serviceMap[addr] = filterService(this.serviceMap[addr]);
           this.serviceMap[addr].push(service);
           this.emit('event', { action: STATUS_UP, data: service });
         } else if (service.status === STATUS_DOWN) {
-          this.serviceMap[addr] = (this.serviceMap[addr] || []).filter(srv => srv.fqdn !== service.fqdn);
+          this.serviceMap[addr] = filterService(this.serviceMap[addr]);
           this.serviceMap[addr].push(service);
           this.emit('event', { action: STATUS_DOWN, data: service });
         }

@@ -1,6 +1,6 @@
 {
   "name": "node-service-discovery-kit",
-  "version": "0.9.16",
+  "version": "0.9.17",
   "description": "A node.js class providing service discovery functionalities for your service using Bonjour and MQTT.",
   "main": "dist/index.js",
   "dependencies": {

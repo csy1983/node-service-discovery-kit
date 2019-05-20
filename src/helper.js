@@ -24,6 +24,12 @@ export function findSerialNumber(service) {
   ) : '';
 }
 
+export function filterService(services = [], service) {
+  return services.filter((srv) => {
+    return (srv.type !== service.type && srv.port !== service.port);
+  })
+}
+
 export function defaultComparator(service, searchKey, searchValue) {
   switch (searchKey) {
     case 'addresses':
