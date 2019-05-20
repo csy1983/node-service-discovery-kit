@@ -26,7 +26,10 @@ export function findSerialNumber(service) {
 
 export function filterService(services = [], service) {
   return services.filter((srv) => {
-    return (srv.type !== service.type && srv.port !== service.port);
+    if (srv.type !== service.type) return true;
+    if (srv.port !== service.port) return true;
+    if (findSerialNumber(srv) !== findSerialNumber(service)) return true;
+    return false;
   })
 }
 

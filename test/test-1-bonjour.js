@@ -96,7 +96,7 @@ describe('EchoServer with Bonjour', function() {
       const services = echoServer.findService();
       DEBUG(services);
       if (services.length === 2) done();
-      else done(services);
+      else done(`Number of service found should be 2, but received ${services.length}.`);
     });
   });
 

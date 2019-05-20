@@ -147,11 +147,11 @@ export default class MQTTSD extends EventEmitter {
         service.timestamp = Date.now();
 
         if (service.status === STATUS_UP) {
-          this.serviceMap[addr] = filterService(this.serviceMap[addr]);
+          this.serviceMap[addr] = filterService(this.serviceMap[addr], service);
           this.serviceMap[addr].push(service);
           this.emit('event', { action: STATUS_UP, data: service });
         } else if (service.status === STATUS_DOWN) {
-          this.serviceMap[addr] = filterService(this.serviceMap[addr]);
+          this.serviceMap[addr] = filterService(this.serviceMap[addr], service);
           this.serviceMap[addr].push(service);
           this.emit('event', { action: STATUS_DOWN, data: service });
         }
