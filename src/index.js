@@ -187,6 +187,7 @@ export default class ServiceDiscovery {
     if (opts.updateNetwork) {
       await this.stop(opts);
       await this.start(opts);
+      this.publishService();
     } else {
       this.bonjour.updateProps(props);
       this.mqttsd.updateProps(props);
@@ -205,6 +206,16 @@ export default class ServiceDiscovery {
     this.children.forEach((child) => {
       child.stop().then(() => child.start());
     });
+  }
+
+  /**
+   * Refresh online services.
+   *
+   * @method refreshServices
+   */
+  refreshServices(options = {}) {
+    this.bonjour.refresh(options);
+    this.mqttsd.refresh(options);
   }
 
   /**

@@ -160,6 +160,16 @@ export default class MQTTSD extends EventEmitter {
   }
 
   /**
+   * Refresh online services
+   *
+   * @method refresh
+   */
+  refresh(options = {}) {
+    if (!this.configs.browse) return;
+    // Nothing to do for MQTTSD
+  }
+
+  /**
    * Publish service with given properties.
    *
    * @method publish

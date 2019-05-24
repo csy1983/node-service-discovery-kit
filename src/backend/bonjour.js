@@ -38,7 +38,7 @@ export default class Bonjour extends EventEmitter {
     return new Promise((resolve) => {
       this.networkInterface = networkInterface();
       this.bonjour = bonjour(process.platform === 'win32' ? { interface: this.networkInterface.address } : {});
-      if (this.configs.browse) this.browse();
+      this.browse();
       this.publish();
       resolve();
     });
@@ -56,7 +56,7 @@ export default class Bonjour extends EventEmitter {
         setTimeout(() => {
           this.bonjour.destroy();
           resolve();
-        }, 3000);
+        }, 1000);
       });
     });
   }
@@ -69,8 +69,16 @@ export default class Bonjour extends EventEmitter {
    * @private
    */
   browse() {
-    return this.bonjour.find({ type: this.props.type })
-    .on('up', (service) => {
+    if (!this.configs.browse) return;
+    if (this.browser) {
+      this.browser.stop();
+      this.browser.removeAllListeners();
+      delete this.browser;
+    }
+
+    this.browser = this.bonjour.find({ type: this.props.type });
+
+    this.browser.on('up', (service) => {
       const addrs = this.findAddresses(service);
       if (addrs) {
         service.addresses = addrs;
@@ -80,8 +88,9 @@ export default class Bonjour extends EventEmitter {
         this.serviceMap[addrs[0]].push(service);
         this.emit('event', { action: STATUS_UP, data: service });
       }
-    })
-    .on('down', (service) => {
+    });
+
+    this.browser.on('down', (service) => {
       const addrs = this.findAddresses(service);
       if (addrs) {
         service.status = STATUS_DOWN;
@@ -89,6 +98,25 @@ export default class Bonjour extends EventEmitter {
         this.serviceMap[addrs[0]] = filterService(this.serviceMap[addrs[0]], service);
         this.serviceMap[addrs[0]].push(service);
         this.emit('event', { action: STATUS_DOWN, data: service });
+      }
+    });
+  }
+
+  /**
+   * Refresh online services
+   *
+   * @method refresh
+   */
+  refresh(options = {}) {
+    this.browse();
+    this.browser.services.forEach((service) => {
+      const addrs = this.findAddresses(service);
+      if (addrs) {
+        service.addresses = addrs;
+        service.status = STATUS_UP;
+        service.timestamp = Date.now();
+        this.serviceMap[addrs[0]] = filterService(this.serviceMap[addrs[0]], service);
+        this.serviceMap[addrs[0]].push(service);
       }
     });
   }
