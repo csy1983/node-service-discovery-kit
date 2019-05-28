@@ -14,6 +14,7 @@ export default class Dummy extends EventEmitter {
   stop() {
     return new Promise(resolve => resolve());
   }
+  refresh(options = {}) {}
   publish() {}
   setProps(props = {}) {}
   updateProps(props) {}

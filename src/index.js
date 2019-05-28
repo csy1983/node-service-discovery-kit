@@ -101,7 +101,7 @@ export default class ServiceDiscovery {
    * @return {Promise} A promise of the result of the initiate process.
    */
   async start(opts = {}) {
-    if (!opts.updateNetwork) {
+    if (!opts.restart) {
       await this.delegate.serviceDiscoveryWillStart();
     }
 
@@ -144,7 +144,7 @@ export default class ServiceDiscovery {
     this.mqttsd.setProps(props);
     await this.bonjour.start();
     await this.mqttsd.start();
-    if (!opts.updateNetwork) {
+    if (!opts.restart) {
       await this.delegate.serviceDiscoveryDidStart();
     }
   }
@@ -157,7 +157,7 @@ export default class ServiceDiscovery {
    * @return {Promise} A promise of the result of the terminate process.
    */
   async stop(opts = {}) {
-    if (!opts.updateNetwork) {
+    if (!opts.restart) {
       await this.delegate.serviceDiscoveryWillStop();
     }
     await Promise.all(this.children.map(child => child.stop()));
@@ -165,7 +165,7 @@ export default class ServiceDiscovery {
     await this.mqttsd.stop();
     delete this.bonjour;
     delete this.mqttsd;
-    if (!opts.updateNetwork) {
+    if (!opts.restart) {
       await this.delegate.serviceDiscoveryDidStop();
     }
   }
@@ -184,7 +184,7 @@ export default class ServiceDiscovery {
     if (!props.txt) props.txt = { path: '/' };
     else if (!props.txt.path) props.txt.path = '/';
 
-    if (opts.updateNetwork) {
+    if (opts.restart) {
       await this.stop(opts);
       await this.start(opts);
       this.publishService();
