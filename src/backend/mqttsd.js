@@ -8,7 +8,7 @@ import { filterService, findServiceHelper, networkInterface } from '../helper';
 const MQTTSD_QUERY_TOPIC = 'mqttsd-query';
 const MQTTSD_TOPIC = 'mqttsd';
 const MQTTSD_QOS = { qos: 1 };
-const MQTTSD_QUERY_RESPONSE_DELAY = 5000;
+const MQTTSD_QUERY_RESPONSE_DELAY = 500;
 
 /**
  * Service discovery using MQTT.
@@ -94,10 +94,10 @@ export default class MQTTSD extends EventEmitter {
    * @return {Promise} A promise of the result of stop process.
    */
   stop() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if (!this.configs.brokerURL) return resolve();
       if (this.mqtt.connected) {
-        const timeout = setTimeout(resolve, 5000);
+        const timeout = setTimeout(() => reject('Service down timeout'), 15000);
         this.mqtt.publish(MQTTSD_TOPIC, JSON.stringify(Object.assign(this.props, {
           addresses: [this.networkInterface.address],
           status: STATUS_DOWN,
