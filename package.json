@@ -1,15 +1,15 @@
 {
   "name": "node-service-discovery-kit",
-  "version": "0.9.19",
+  "version": "0.9.20",
   "description": "A node.js class providing service discovery functionalities for your service using Bonjour and MQTT.",
   "main": "dist/index.js",
   "dependencies": {
     "autobind-decorator": "^1.4.1",
-    "babel-polyfill": "^6.23.0",
+    "babel-polyfill": "^6.26.0",
     "bonjour": "^3.5.0",
     "default-gateway": "^4.2.0",
     "ip": "^1.1.5",
-    "mqtt": "^2.18.8"
+    "mqtt": "^3.0.0"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",
@@ -25,9 +25,9 @@
     "eslint-plugin-import": "^2.2.0",
     "istanbul": "^1.1.0-alpha.1",
     "mocha": "^5.2.0",
-    "mosca": "^2.2.0",
+    "mosca": "^2.8.3",
     "webpack": "^2.2.1",
-    "webpack-node-externals": "^1.5.4"
+    "webpack-node-externals": "^1.7.2"
   },
   "keywords": [
     "bonjour",
