@@ -187,11 +187,11 @@ export default class ServiceDiscovery {
     if (opts.restart) {
       await this.stop(opts);
       await this.start(opts);
-      this.publishService();
+      this.publishService({ onError: opts.onError });
     } else {
       this.bonjour.updateProps(props);
       this.mqttsd.updateProps(props);
-      this.publishService({ propsUpdated: true });
+      this.publishService({ propsUpdated: true, onError: opts.onError });
     }
   }
 

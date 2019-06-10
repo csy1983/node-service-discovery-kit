@@ -126,13 +126,29 @@ export default class Bonjour extends EventEmitter {
    *
    * @method publish
    */
-  publish(options = {}) {
+  publish(options = {}, cb) {
+    function __handleError() {
+      this.bonjourService.on('error', (error) => {
+        if (error.message === 'Service name is already in use on the network') {
+          // Try again to check if it is gone
+          this.bonjourService = this.bonjour.publish(this.props);
+          this.bonjourService.on('error', (error) => {
+            if (typeof options.onError === 'function') {
+              options.onError(error);
+            }
+          });
+        }
+      });
+    }
+
     if (this.bonjourService && this.bonjourService.published) {
       this.bonjourService.stop(() => {
         this.bonjourService = this.bonjour.publish(this.props);
+        __handleError.call(this);
       });
     } else if (this.props.name && this.props.port && this.props.type) {
       this.bonjourService = this.bonjour.publish(this.props);
+      __handleError.call(this);
     }
   }
 
